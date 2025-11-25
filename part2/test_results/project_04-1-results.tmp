@@ -1,0 +1,210 @@
+===========================================================================================================================================
+== Test 1: Concurrent HTTP Server
+== Launches HTTP server, then concurrently runs several 'curl' instances to
+== request files, including one non-existent file. Checks that all files are
+== successfully downloaded and match the original versions. Note that you won't
+== be able to pass this test unless your sever supports a minimum number of
+== concurrently active clients.
+Running test...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 1: Run Directory Setup
+-- Creates a fresh directory to store files downloaded from the server
+Expected output is in file 'test_results/raw/project_04-1-1-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-1-actual.tmp'
+Test PASSED
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 2
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 1: Start Concurrent HTTP Server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 1: Start Request quote.txt
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 2: Start Request headers.html
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 3: Start Request index.html
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 4: Start Request courses.txt
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 5: Start Request mt2_practice.pdf
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 6: Start Request gatsby.txt
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 7: Start Request africa.jpg
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 8: Start Request ocelot.jpg
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 9: Start Request hard_drive.png
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 10: Start Request Lec01.pdf
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 4
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 1: Finish Request quote.txt
+-- Requests the file 'quote.txt' from the server
+Expected output is in file 'test_results/raw/project_04-1-3-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-3-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                             ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/quote.txt > downloaded_files/quote.txt   $ curl -s -S http://localhost:$PORT/quote.txt > downloaded_files/quote.txt
+                                                                           > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                       $ exit
+exit                                                                         exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Requests the file 'headers.html' from the server
+Expected output is in file 'test_results/raw/project_04-1-4-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-4-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                                   ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/headers.html > downloaded_files/headers.html   $ curl -s -S http://localhost:$PORT/headers.html > downloaded_files/headers.html
+                                                                                 > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                             $ exit
+exit                                                                               exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Requests the file 'index.html' from the server
+Expected output is in file 'test_results/raw/project_04-1-5-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-5-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                               ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/index.html > downloaded_files/index.html   $ curl -s -S http://localhost:$PORT/index.html > downloaded_files/index.html
+                                                                             > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                         $ exit
+exit                                                                           exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Requests the file 'courses.txt' from the server
+Expected output is in file 'test_results/raw/project_04-1-6-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-6-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                                 ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/courses.txt > downloaded_files/courses.txt   $ curl -s -S http://localhost:$PORT/courses.txt > downloaded_files/courses.txt
+                                                                               > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                           $ exit
+exit                                                                             exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Requests the file 'mt2_practice.pdf' from the server
+Expected output is in file 'test_results/raw/project_04-1-7-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-7-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                                           ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/mt2_practice.pdf > downloaded_files/mt2_practice.pdf   $ curl -s -S http://localhost:$PORT/mt2_practice.pdf > downloaded_files/mt2_practice.pdf
+                                                                                         > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                                     $ exit
+exit                                                                                       exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Requests the file 'gatsby.txt' from the server
+Expected output is in file 'test_results/raw/project_04-1-8-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-8-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                               ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/gatsby.txt > downloaded_files/gatsby.txt   $ curl -s -S http://localhost:$PORT/gatsby.txt > downloaded_files/gatsby.txt
+                                                                             > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                         $ exit
+exit                                                                           exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Requests the file 'africa.jpg' from the server
+Expected output is in file 'test_results/raw/project_04-1-9-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-9-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                               ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/africa.jpg > downloaded_files/africa.jpg   $ curl -s -S http://localhost:$PORT/africa.jpg > downloaded_files/africa.jpg
+                                                                             > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                         $ exit
+exit                                                                           exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Requests the file 'ocelot.jpg' from the server
+Expected output is in file 'test_results/raw/project_04-1-10-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-10-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                               ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/ocelot.jpg > downloaded_files/ocelot.jpg   $ curl -s -S http://localhost:$PORT/ocelot.jpg > downloaded_files/ocelot.jpg
+                                                                             > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                         $ exit
+exit                                                                           exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Requests the file 'hard_drive.png' from the server
+Expected output is in file 'test_results/raw/project_04-1-11-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-11-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                                       ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/hard_drive.png > downloaded_files/hard_drive.png   $ curl -s -S http://localhost:$PORT/hard_drive.png > downloaded_files/hard_drive.png
+                                                                                     > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                                 $ exit
+exit                                                                                   exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Requests the file 'Lec01.pdf' from the server
+Expected output is in file 'test_results/raw/project_04-1-12-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-12-actual.tmp'
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                             ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/Lec01.pdf > downloaded_files/Lec01.pdf   $ curl -s -S http://localhost:$PORT/Lec01.pdf > downloaded_files/Lec01.pdf
+                                                                           > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+$ exit                                                                       $ exit
+exit                                                                         exit
+== Line Differences ==
+ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 5
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 1: Not executed due to previous error(s)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 6
+-------------------------------------------------------------------------------------------------------------------------------------------
+Prevously started test ignored due to previous error(s)
+-- Runs HTTP Server
+Expected output is in file 'test_results/raw/project_04-1-2-expected.tmp'
+Actual output is in file 'test_results/raw/project_04-1-2-actual.tmp'
+Test PASSED
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 7
+-------------------------------------------------------------------------------------------------------------------------------------------
+Action 1: Not executed due to previous error(s)
