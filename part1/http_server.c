@@ -31,6 +31,8 @@ int main(int argc, char **argv) {
     const char *serve_dir = argv[1];
     const char *port = argv[2];
 
+    // Add signal handler code for SIGINT
+
     // Setup TCP Server
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -87,13 +89,25 @@ int main(int argc, char **argv) {
         // Get resource name from client
         char *resource_name;
         if (read_http_request(client_fd, resource_name) == -1) {
+            // Error message will print in read_http_request()
             close(client_fd);
             close(sock_fd);
             return 1;
         }
 
         // Convert the requested resource name to a proper file path.
+        char *resource_path;
+        strcpy(resource_path, serve_dir); // copies serve_dir to resource_path so that strcat() does not change serve_dir directly
+        strcat(resource_path, resource_name); // append resource_name to serve_dir and store in resource_path
+
         // Call write_http_response() providing the full path to the resource as an argument.
+        if (write_http_response(client_fd, resource_path) == -1) {
+            // Error message will print in write_http_response()
+            close(client_fd);
+            close(sock_fd);
+            return 1;
+        }
+
 
         if (close(client_fd) == -1) {
             perror("close");
