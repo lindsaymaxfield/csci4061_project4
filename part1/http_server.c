@@ -31,11 +31,12 @@ int main(int argc, char **argv) {
     const char *serve_dir = argv[1];
     const char *port = argv[2];
 
+    // Setup TCP Server
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM; // TCP
-    hints.ai_flags = AI_PASSIVE;    // We'll be acting as a server
+    hints.ai_flags = AI_PASSIVE;    // Will be acting as a server
 
     struct addrinfo *server;
 
@@ -70,7 +71,41 @@ int main(int argc, char **argv) {
 
     // TODO Complete the rest of this function
 
+    while (keep_going != 0) {
+        // Wait to receive a connection request from client
+        int client_fd = accept(sock_fd, NULL, NULL);
+        if (client_fd == -1) {
+            if (errno != EINTR) { // accept failed
+                perror("accept");
+                close(sock_fd);
+                return 1;
+            } else { // need to shut down server since accept() was interrupted by a signal
+                break;
+            }
+        }
 
+        // Get resource name from client
+        char *resource_name;
+        if (read_http_request(client_fd, resource_name) == -1) {
+            close(client_fd);
+            close(sock_fd);
+            return 1;
+        }
+
+        // Convert the requested resource name to a proper file path.
+        // Call write_http_response() providing the full path to the resource as an argument.
+
+        if (close(client_fd) == -1) {
+            perror("close");
+            close(sock_fd);
+            return 1;
+        }
+    }
+
+    if (close(sock_fd) == -1) {
+        perror("close");
+        return 1;
+    }
 
     return 0;
 }
