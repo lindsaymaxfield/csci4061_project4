@@ -31,7 +31,15 @@ int main(int argc, char **argv) {
     const char *serve_dir = argv[1];
     const char *port = argv[2];
 
-    // Add signal handler code for SIGINT
+    // Catch SIGINT so we can clean up properly
+    struct sigaction sigact;
+    sigact.sa_handler = handle_sigint;
+    sigfillset(&sigact.sa_mask);
+    sigact.sa_flags = 0;    // No SA_RESTART
+    if (sigaction(SIGINT, &sigact, NULL) == -1) {
+        perror("sigaction");
+        return 1;
+    }
 
     // Setup TCP Server
     struct addrinfo hints;
@@ -55,6 +63,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // May need to add code to deal with binding to already taken port...we'll see
     if (bind(sock_fd, server->ai_addr, server->ai_addrlen) == -1) {
         perror("bind");
         freeaddrinfo(server);

@@ -30,6 +30,21 @@ const char *get_mime_type(const char *file_extension) {
 
 int read_http_request(int fd, char *resource_name) {
     // TODO Not yet implemented
+    char *buffer[BUFSIZE];
+    int num_bytes_read;
+
+    if (read(fd, buffer, BUFSIZE) == -1) {
+        perror("read");
+        return -1;
+    }
+
+    char *token = strtok(buffer, " "); // specify the string to parse for the first call to strtok
+    token = strtok(NULL, " "); // call strtok again, this will have resource_name
+
+    // may need to error check to make sure token isn't NULL here?
+
+    strcpy(resource_name, token);
+
     return 0;
 }
 
