@@ -72,6 +72,7 @@ int write_http_response(int fd, const char *resource_path) {
             file_exists = 0;
         } else {    // other error occurred, exit
             perror("stat");
+            free(response);
             return -1;
         }
     } else {    // file exists
@@ -83,6 +84,7 @@ int write_http_response(int fd, const char *resource_path) {
                             S_IRUSR);    // open file to read, give read permissions to user
         if (resource == -1) {
             perror("open");
+            free(response);
             return -1;
         }
 
@@ -90,6 +92,7 @@ int write_http_response(int fd, const char *resource_path) {
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
             close(resource);
+            free(response);
             return -1;
         }
         capacity = capacity + strlen(message) + strlen(endline);
@@ -108,6 +111,7 @@ int write_http_response(int fd, const char *resource_path) {
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
             close(resource);
+            free(response);
             return -1;
         }
         capacity = capacity + strlen("Content-Type: ") + strlen(mime_type) + strlen(endline);
@@ -120,6 +124,7 @@ int write_http_response(int fd, const char *resource_path) {
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
             close(resource);
+            free(response);
             return -1;
         }
         capacity = capacity + strlen("Content-Length: ") + strlen(file_size) + strlen(endline);
@@ -132,6 +137,7 @@ int write_http_response(int fd, const char *resource_path) {
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
             close(resource);
+            free(response);
             return -1;
         }
         capacity = capacity + strlen(endline);
@@ -145,6 +151,7 @@ int write_http_response(int fd, const char *resource_path) {
             if (response == NULL) {
                 fprintf(stderr, "realloc\n");
                 close(resource);
+                free(response);
                 return -1;
             }
             capacity = capacity + num_bytes_read;
@@ -153,6 +160,7 @@ int write_http_response(int fd, const char *resource_path) {
         if (num_bytes_read == -1) {    // read error occurred
             perror("read");
             close(resource);
+            free(response);
             return -1;
         }
 
@@ -160,18 +168,21 @@ int write_http_response(int fd, const char *resource_path) {
         if (write(fd, response, strlen(response)) == -1) {
             perror("write");
             close(resource);
+            free(response);
             return -1;
         }
 
         // Close resource file
         if (close(resource) == -1) {
             perror("close");
+            free(response);
             return -1;
         }
     } else {                          // file does not exist
         response = realloc(response, strlen(message) + strlen(endline) + capacity);
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
+            free(response);
             return -1;
         }
         capacity = capacity + strlen(message) + strlen(endline);
@@ -182,6 +193,7 @@ int write_http_response(int fd, const char *resource_path) {
         response = realloc(response, strlen("Content-Length: 0\r\n") + capacity);
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
+            free(response);
             return -1;
         }
         capacity = capacity + strlen("Content-Length: 0\r\n");
@@ -191,6 +203,7 @@ int write_http_response(int fd, const char *resource_path) {
         response = realloc(response, strlen(endline) + capacity);
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
+            free(response);
             return -1;
         }
         capacity = capacity + strlen(endline);
@@ -199,9 +212,12 @@ int write_http_response(int fd, const char *resource_path) {
         // Write the response to the client
         if (write(fd, response, strlen(response)) == -1) {
             perror("write");
+            free(response);
             return -1;
         }
     }
+
+    free(response);
 
     return 0;
 }

@@ -82,6 +82,7 @@ int main(int argc, char **argv) {
 
     while (keep_going != 0) {
         // Wait to receive a connection request from client
+        //printf("Waiting for client to connect\n"); // For testing
         int client_fd = accept(sock_fd, NULL, NULL);
         if (client_fd == -1) {
             if (errno != EINTR) { // accept failed
@@ -92,9 +93,10 @@ int main(int argc, char **argv) {
                 break;
             }
         }
+        //printf("New client connected\n"); // For testing
 
         // Get resource name from client
-        char *resource_name = "";
+        char resource_name[BUFSIZE];
         if (read_http_request(client_fd, resource_name) == -1) {
             // Error message will print in read_http_request()
             close(client_fd);
@@ -103,7 +105,7 @@ int main(int argc, char **argv) {
         }
 
         // Convert the requested resource name to a proper file path.
-        char *resource_path = "";
+        char resource_path[BUFSIZE];
         strcpy(resource_path, serve_dir); // copies serve_dir to resource_path so that strcat() does not change serve_dir directly
         strcat(resource_path, resource_name); // append resource_name to serve_dir and store in resource_path
 
