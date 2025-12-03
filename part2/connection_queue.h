@@ -16,8 +16,8 @@ typedef struct {
     // TODO Add necessary thread synchronization primitives to this struct
 
     pthread_mutex_t lock;
-    pthread_cond_t queue_full;
-    pthread_cond_t queue_empty;
+    pthread_cond_t queue_not_full;
+    pthread_cond_t queue_not_empty;
 } connection_queue_t;
 
 /*
