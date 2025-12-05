@@ -1,4 +1,4 @@
 $ curl -s -S http://localhost:$PORT/headers.html > downloaded_files/headers.html
-curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+curl: (18) transfer closed with 16 bytes remaining to read
 $ exit
 exit

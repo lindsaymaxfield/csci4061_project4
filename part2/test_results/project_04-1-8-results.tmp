@@ -1,13 +1,6 @@
 -- Requests the file 'gatsby.txt' from the server
 Expected output is in file 'test_results/raw/project_04-1-8-expected.tmp'
 Actual output is in file 'test_results/raw/project_04-1-8-actual.tmp'
-Test FAILED
-== Side-by-Side Comparison ==
-== Differing lines have a character like '|' '>' or '<' in the middle
-==== EXPECT ====                                                               ==== ACTUAL ====
-$ curl -s -S http://localhost:$PORT/gatsby.txt > downloaded_files/gatsby.txt   $ curl -s -S http://localhost:$PORT/gatsby.txt > downloaded_files/gatsby.txt
-                                                                             > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
-$ exit                                                                         $ exit
-exit                                                                           exit
-== Line Differences ==
-ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+Test CANCELED. Output so far:
+$ curl -s -S http://localhost:$PORT/gatsby.txt > downloaded_files/gatsby.txt
+

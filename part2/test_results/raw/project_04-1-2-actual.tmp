@@ -1,3 +1,47 @@
 $ ./http_server server_files $PORT
-$ exit
-exit
+[main] accepted client fd=4
+[main] accepted client fd=5
+[worker] handling fd=4
+[main] accepted client fd=6
+[worker] handling fd=5
+[main] accepted client fd=7
+[main] accepted client fd=8
+[main] accepted client fd=9
+[main] accepted client fd=10
+[main] accepted client fd=11
+[main] accepted client fd=12
+[worker] handling fd=6
+[worker] handling fd=7
+[worker] handling fd=8
+[main] accepted client fd=13
+File size is 1681872 bytes
+File size is 987613 bytes
+File size is 68 bytes
+File size is 299452 bytes
+File size is 229 bytes
+[worker] handling fd=9
+[worker] handling fd=10
+write: Broken pipe
+Error from writing in worker thread
+[worker] handling fd=11
+write: Connection reset by peer
+Error from writing in worker thread
+[worker] handling fd=12
+write: Connection reset by peer
+Error from writing in worker thread
+[worker] handling fd=13
+File size is 359 bytes
+File size is 2216288 bytes
+File size is 147103 bytes
+File size is 2655 bytes
+File size is 1186359 bytes
+write: Broken pipe
+write: Broken pipe
+write: Broken pipe
+write: Broken pipe
+Error from writing in worker thread
+Error from writing in worker thread
+Error from writing in worker thread
+Error from writing in worker thread
+write: Connection reset by peer
+Error from writing in worker thread

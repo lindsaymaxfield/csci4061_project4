@@ -1,4 +1,1 @@
 $ curl -s -S http://localhost:$PORT/hard_drive.png > downloaded_files/hard_drive.png
-curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
-$ exit
-exit

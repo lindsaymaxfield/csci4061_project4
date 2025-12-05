@@ -6,8 +6,8 @@ Test FAILED
 == Differing lines have a character like '|' '>' or '<' in the middle
 ==== EXPECT ====                                                             ==== ACTUAL ====
 $ curl -s -S http://localhost:$PORT/quote.txt > downloaded_files/quote.txt   $ curl -s -S http://localhost:$PORT/quote.txt > downloaded_files/quote.txt
-                                                                           > curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+                                                                           > curl: (18) transfer closed with 48 bytes remaining to read
 $ exit                                                                       $ exit
 exit                                                                         exit
 == Line Differences ==
-ACTUAL 2) curl: (7) Failed to connect to localhost port 8000 after 0 ms: Connection refused
+ACTUAL 2) curl: (18) transfer closed with 48 bytes remaining to read
