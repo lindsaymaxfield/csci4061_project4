@@ -96,7 +96,6 @@ int write_http_response(int fd, const char *resource_path) {
         // Find file length
         char file_size[12];
         snprintf(file_size, 12, "%d", (unsigned) stat_buf.st_size);    // convert st_size to string
-        printf("File size is %s bytes\n", file_size);
 
         // Calculate size of header to write to client
         int capacity = strlen("HTTP/1.0 \r\nContent-Type: \r\nContent-Length: \r\n\r\n") +
