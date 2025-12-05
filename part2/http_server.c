@@ -100,11 +100,30 @@ int main(int argc, char **argv) {
     hints.ai_flags = AI_PASSIVE;        // Will be acting as a server
 
     struct addrinfo *server;
-    getaddrinfo(NULL, &port, &hints, &server);    // TODO: error check
+    int ret_val = getaddrinfo(NULL, port, &hints, &server);
+    if (ret_val) {
+        fprintf(stderr, "getaddrinfo failed: %s\n", gai_strerror(ret_val));
+    }
     int sock_fd =
         socket(server->ai_family, server->ai_socktype, server->ai_protocol);    // TODO: error check
-    bind(sock_fd, server->ai_addr, server->ai_protocol);                        // TODO: error check
-    listen(sock_fd, LISTEN_QUEUE_LEN);                                          // TODO: error check
+    if (sock_fd == -1) {
+        perror("socket");
+        freeaddrinfo(server);
+        freeaddrinfo(&hints);
+        return 1;
+    }
+    if (bind(sock_fd, server->ai_addr, server->ai_addrlen)) {
+        perror("bind");
+        return 1;
+    }
+    if (listen(sock_fd, LISTEN_QUEUE_LEN)) {
+        perror("listen");
+        freeaddrinfo(server);
+        close(sock_fd);
+        return 1;
+    }
+    freeaddrinfo(server);
+    freeaddrinfo(&hints);
 
     // Main thread loop
     while (keep_going) {
