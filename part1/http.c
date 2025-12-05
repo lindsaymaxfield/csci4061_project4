@@ -4,10 +4,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 #define BUFSIZE 512
 
@@ -38,7 +38,7 @@ const char *get_file_extension(const char *resource_path) {
 
 int read_http_request(int fd, char *resource_name) {
     char buffer[BUFSIZE];
-    //int num_bytes_read;
+    // int num_bytes_read;
 
     if (read(fd, buffer, BUFSIZE) == -1) {
         perror("read");
@@ -46,8 +46,14 @@ int read_http_request(int fd, char *resource_name) {
     }
 
     char *token =
-        strtok(buffer, " ");      // specify the string to parse for the first call to strtok
-    token = strtok(NULL, " ");    // call strtok again, this will have resource_name
+        strtok(buffer, " ");    // specify the string to parse for the first call to strtok
+    if (token != NULL) {
+        token = strtok(NULL, " ");    // call strtok again, this will have resource_name
+    }
+    if (token == NULL) {
+        printf("strtok error\n");
+        return -1;
+    }
 
     // may need to error check to make sure token isn't NULL here?
 
@@ -60,7 +66,7 @@ int write_http_response(int fd, const char *resource_path) {
     char *response = malloc(10);
     int capacity = 10;
     strcpy(response, "HTTP/1.0 ");    // http response to build
-    char *message = "";                   // will hold either "404 Not Found" or "200 OK"
+    char *message = "";               // will hold either "404 Not Found" or "200 OK"
     char *endline = "\r\n";
     int file_exists = 1;
 
@@ -105,9 +111,11 @@ int write_http_response(int fd, const char *resource_path) {
         // off_t file_size = stat_buf.st_size;
         char file_size[12];                                            // idk why I did 12 yet
         snprintf(file_size, 12, "%d", (unsigned) stat_buf.st_size);    // convert st_size to string
+        printf("File size is %s bytes\n", file_size);
 
         // Add Content-Type line to response header
-        response = realloc(response, strlen("Content-Type: ") + strlen(mime_type) + strlen(endline) + capacity);
+        response = realloc(
+            response, strlen("Content-Type: ") + strlen(mime_type) + strlen(endline) + capacity);
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
             close(resource);
@@ -120,7 +128,8 @@ int write_http_response(int fd, const char *resource_path) {
         strcat(response, endline);
 
         // Add Content-Length line to response header
-        response = realloc(response, strlen("Content-Length: ") + strlen(file_size) + strlen(endline) + capacity);
+        response = realloc(
+            response, strlen("Content-Length: ") + strlen(file_size) + strlen(endline) + capacity);
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
             close(resource);
@@ -145,6 +154,7 @@ int write_http_response(int fd, const char *resource_path) {
 
         // Read the file in chunks and add to the response in chunks
         int num_bytes_read = 0;
+        int total_bytes_read = 0;
         char buffer[BUFSIZE];
         while ((num_bytes_read = read(resource, buffer, BUFSIZE)) > 0) {
             response = realloc(response, num_bytes_read + capacity);
@@ -156,6 +166,7 @@ int write_http_response(int fd, const char *resource_path) {
             }
             capacity = capacity + num_bytes_read;
             strncat(response, buffer, num_bytes_read);
+            total_bytes_read += num_bytes_read;
         }
         if (num_bytes_read == -1) {    // read error occurred
             perror("read");
@@ -163,6 +174,15 @@ int write_http_response(int fd, const char *resource_path) {
             free(response);
             return -1;
         }
+        printf("Total bytes read: %d\n", total_bytes_read);
+
+        printf("response size: %ld bytes\n", strlen(response));
+
+        FILE *debug_response = fopen("debug_response_out.txt", "w");
+        fwrite(response, sizeof(char), strlen(response), debug_response);
+        fclose(debug_response);
+
+        printf("response size: %ld bytes\n", strlen(response));
 
         // Write the response to the client
         if (write(fd, response, strlen(response)) == -1) {
@@ -178,7 +198,7 @@ int write_http_response(int fd, const char *resource_path) {
             free(response);
             return -1;
         }
-    } else {                          // file does not exist
+    } else {    // file does not exist
         response = realloc(response, strlen(message) + strlen(endline) + capacity);
         if (response == NULL) {
             fprintf(stderr, "realloc\n");
