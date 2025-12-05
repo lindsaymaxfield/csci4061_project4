@@ -14,5 +14,3 @@
 #ignore testius
 *.py
 
-#ignore test outputs
-*.tmp

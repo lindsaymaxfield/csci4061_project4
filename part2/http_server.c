@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
 
     // Create worker threads
     connection_queue_t queue;
+    connection_queue_init(&queue);
     pthread_t threads[N_THREADS];
     for (int i = 0; i < N_THREADS; i++) {
         pthread_create(&threads[i], NULL, worker_thread, &queue);
