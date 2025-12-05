@@ -29,7 +29,11 @@ const char *get_mime_type(const char *file_extension) {
     return NULL;
 }
 
-// Returns file extension as a string
+/*
+ * Get the file extension from a given file path string
+ * resource_path: The path of the file to get the extension from
+ * Returns file extension as a string or NULL if extension is not found
+ */
 const char *get_file_extension(const char *resource_path) {
     const char *extension =
         strrchr(resource_path, '.');    // get pointer to last occurrance of '.' in the string

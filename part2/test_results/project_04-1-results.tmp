@@ -83,21 +83,39 @@ Action 7: Finish Request africa.jpg
 -- Requests the file 'africa.jpg' from the server
 Expected output is in file 'test_results/raw/project_04-1-9-expected.tmp'
 Actual output is in file 'test_results/raw/project_04-1-9-actual.tmp'
-Test PASSED
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                               ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/africa.jpg > downloaded_files/africa.jpg   $ curl -s -S http://localhost:$PORT/africa.jpg > downloaded_files/africa.jpg
+                                                                             > curl: (18) transfer closed with 435165 bytes remaining to read
+$ exit                                                                         $ exit
+exit                                                                           exit
+== Line Differences ==
+ACTUAL 2) curl: (18) transfer closed with 435165 bytes remaining to read
 -------------------------------------------------------------------------------------------------------------------
-Action 8: Finish Request ocelot.jpg
+Prevously started test ignored due to previous error(s)
 -- Requests the file 'ocelot.jpg' from the server
 Expected output is in file 'test_results/raw/project_04-1-10-expected.tmp'
 Actual output is in file 'test_results/raw/project_04-1-10-actual.tmp'
-Test PASSED
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                                                               ==== ACTUAL ====
+$ curl -s -S http://localhost:$PORT/ocelot.jpg > downloaded_files/ocelot.jpg   $ curl -s -S http://localhost:$PORT/ocelot.jpg > downloaded_files/ocelot.jpg
+                                                                             > curl: (18) transfer closed with 633399 bytes remaining to read
+$ exit                                                                         $ exit
+exit                                                                           exit
+== Line Differences ==
+ACTUAL 2) curl: (18) transfer closed with 633399 bytes remaining to read
 -------------------------------------------------------------------------------------------------------------------
-Action 9: Finish Request hard_drive.png
+Prevously started test ignored due to previous error(s)
 -- Requests the file 'hard_drive.png' from the server
 Expected output is in file 'test_results/raw/project_04-1-11-expected.tmp'
 Actual output is in file 'test_results/raw/project_04-1-11-actual.tmp'
 Test PASSED
 -------------------------------------------------------------------------------------------------------------------
-Action 10: Finish Request Lec01.pdf
+Prevously started test ignored due to previous error(s)
 -- Requests the file 'Lec01.pdf' from the server
 Expected output is in file 'test_results/raw/project_04-1-12-expected.tmp'
 Actual output is in file 'test_results/raw/project_04-1-12-actual.tmp'
@@ -105,25 +123,28 @@ Test PASSED
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 5
 -------------------------------------------------------------------------------------------------------------------
-Action 1: Run Signal HTTP Server
--- Sends SIGINT to HTTP server process, which should cause server to exit
-Expected output is in file 'test_results/raw/project_04-1-14-expected.tmp'
-Actual output is in file 'test_results/raw/project_04-1-14-actual.tmp'
-Test PASSED
+Action 1: Not executed due to previous error(s)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 6
 -------------------------------------------------------------------------------------------------------------------
-Action 1: Finish Concurrent HTTP Server
+Prevously started test ignored due to previous error(s)
 -- Runs HTTP Server
 Expected output is in file 'test_results/raw/project_04-1-2-expected.tmp'
 Actual output is in file 'test_results/raw/project_04-1-2-actual.tmp'
-Test PASSED
+Error: TIMED OUT. Output:
+$ ./http_server server_files $PORT
+File size is 359 bytes
+File size is 299452 bytes
+File size is 2216288 bytes
+File size is 1681872 bytes
+File size is 229 bytes
+File size is 2655 bytes
+File size is 68 bytes
+File size is 147103 bytes
+File size is 987613 bytes
+File size is 1186359 bytes
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 7
 -------------------------------------------------------------------------------------------------------------------
-Action 1: Run Check Downloaded Files
--- Compares each file requested and downloaded from the HTTP server to its
--- original version
-Expected output is in file 'test_results/raw/project_04-1-13-expected.tmp'
-Actual output is in file 'test_results/raw/project_04-1-13-actual.tmp'
-Test PASSED
+Action 1: Not executed due to previous error(s)
