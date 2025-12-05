@@ -54,7 +54,7 @@ int read_http_request(int fd, char *resource_name) {
         token = strtok(NULL, " ");    // call strtok again, this will have resource_name
     }
     if (token == NULL) {
-        fprintf(stderr, "strtok\n");
+        fprintf(stderr, "strtok error\n");
         return -1;
     }
 

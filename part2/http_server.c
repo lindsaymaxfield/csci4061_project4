@@ -57,7 +57,8 @@ void *worker_thread(void *arg) {
         }
 
         if (!read_error) {
-            snprintf(resource_path, (strlen(serve_dir) + strlen(resource_name) + 1), "%s%s", serve_dir, resource_name);
+            snprintf(resource_path, (strlen(serve_dir) + strlen(resource_name) + 1), "%s%s",
+                     serve_dir, resource_name);
         }
 
         if (write_http_response(fd, resource_path)) {
@@ -213,8 +214,8 @@ int main(int argc, char **argv) {
     }
 
     // Once SIGINT has been sent
-    close(sock_fd);
     connection_queue_shutdown(&queue);
+    close(sock_fd);
     for (int i = 0; i < N_THREADS; i++) {
         int result = pthread_join(threads[i], NULL);
         if (result != 0) {
