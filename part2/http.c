@@ -108,7 +108,10 @@ int write_http_response(int fd, const char *resource_path) {
 
         // Write header to the client
         if (write(fd, header, strlen(header)) == -1) {
-            perror("write");
+            if (errno != ECONNRESET) {
+                // If peer resets on shutdown, do not print error message
+                perror("write");
+            }
             close(resource);
             return -1;
         }
@@ -119,20 +122,29 @@ int write_http_response(int fd, const char *resource_path) {
         while ((num_bytes_read = read(resource, buffer, BUFSIZE)) > 0) {
             // Write buffer to client
             if (write(fd, buffer, num_bytes_read) == -1) {
-                perror("write");
+                if (errno != ECONNRESET) {
+                    // If peer resets on shutdown, do not print error message
+                    perror("write");
+                }
                 close(resource);
                 return -1;
             }
         }
         if (num_bytes_read == -1) {    // read error occurred
-            perror("read");
+            if (errno != ECONNRESET) {
+                // If peer resets on shutdown, do not print error message
+                perror("read");
+            }
             close(resource);
             return -1;
         }
 
         // Close resource file
         if (close(resource) == -1) {
-            perror("close");
+            if (errno != ECONNRESET) {
+                // If peer resets on shutdown, do not print error message
+                perror("close");
+            }
             return -1;
         }
     } else {    // file does not exist
@@ -145,7 +157,10 @@ int write_http_response(int fd, const char *resource_path) {
 
         // Write the response to the client
         if (write(fd, header, strlen(header)) == -1) {
-            perror("write");
+            if (errno != ECONNRESET) {
+                // If peer resets on shutdown, do not print error message
+                perror("write");
+            }
             return -1;
         }
     }
