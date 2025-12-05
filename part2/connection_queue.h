@@ -18,6 +18,7 @@ typedef struct {
     pthread_mutex_t lock;
     pthread_cond_t queue_not_full;
     pthread_cond_t queue_not_empty;
+    pthread_cond_t queue_shutdown;
 } connection_queue_t;
 
 /*

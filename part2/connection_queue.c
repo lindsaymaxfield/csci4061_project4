@@ -21,17 +21,18 @@ int connection_queue_enqueue(connection_queue_t *queue, int connection_fd) {
     // TODO Implement Shutdown
     pthread_mutex_lock(&queue->lock);
 
-    while (queue->length == CAPACITY) {
+    while (queue->length == CAPACITY && !queue->shutdown) {
         pthread_cond_wait(&queue->queue_not_full, &queue->lock);
+    }
+
+    if (queue->shutdown) {
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
     }
 
     queue->client_fds[queue->write_idx] = connection_fd;
     queue->write_idx = (queue->write_idx + 1) % CAPACITY;
     queue->length++;
-    // If this is the first thing added to the queue, make sure read_idx is valid
-    if (queue->read_idx == -1) {
-        queue->read_idx = 0;
-    }
 
     pthread_cond_signal(&queue->queue_not_empty);
     pthread_mutex_unlock(&queue->lock);
@@ -43,8 +44,13 @@ int connection_queue_dequeue(connection_queue_t *queue) {
     // TODO: Implement shutdown
     pthread_mutex_lock(&queue->lock);
 
-    while (queue->length == 0) {
+    while (queue->length == 0 && !queue->shutdown) {
         pthread_cond_wait(&queue->queue_not_empty, &queue->lock);
+    }
+
+    if (queue->length == 0 && queue->shutdown) {
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
     }
 
     int retval = queue->client_fds[queue->read_idx];
@@ -59,6 +65,13 @@ int connection_queue_dequeue(connection_queue_t *queue) {
 
 int connection_queue_shutdown(connection_queue_t *queue) {
     // TODO Not yet implemented
+    pthread_mutex_lock(&queue->lock);
+    queue->shutdown = 1;
+    // send both signals to wake up all blocked threads
+    pthread_cond_broadcast(&queue->queue_not_full);
+    pthread_cond_broadcast(&queue->queue_not_empty);
+    pthread_mutex_unlock(&queue->lock);
+
     return 0;
 }
 
