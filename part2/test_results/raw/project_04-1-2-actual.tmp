@@ -1,11 +1,13 @@
 $ ./http_server server_files $PORT
 File size is 359 bytes
-File size is 299452 bytes
-File size is 2216288 bytes
-File size is 1681872 bytes
-File size is 229 bytes
-File size is 2655 bytes
-File size is 68 bytes
 File size is 147103 bytes
+File size is 68 bytes
+File size is 2655 bytes
+File size is 229 bytes
+File size is 2216288 bytes
 File size is 987613 bytes
 File size is 1186359 bytes
+File size is 299452 bytes
+File size is 1681872 bytes
+$ exit
+exit

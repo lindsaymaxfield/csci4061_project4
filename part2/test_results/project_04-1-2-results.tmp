@@ -1,16 +1,31 @@
 -- Runs HTTP Server
 Expected output is in file 'test_results/raw/project_04-1-2-expected.tmp'
 Actual output is in file 'test_results/raw/project_04-1-2-actual.tmp'
-Error: TIMED OUT. Output:
-$ ./http_server server_files $PORT
-File size is 359 bytes
-File size is 299452 bytes
-File size is 2216288 bytes
-File size is 1681872 bytes
-File size is 229 bytes
-File size is 2655 bytes
-File size is 68 bytes
-File size is 147103 bytes
-File size is 987613 bytes
-File size is 1186359 bytes
-
+Test FAILED
+== Side-by-Side Comparison ==
+== Differing lines have a character like '|' '>' or '<' in the middle
+==== EXPECT ====                     ==== ACTUAL ====
+$ ./http_server server_files $PORT   $ ./http_server server_files $PORT
+                                   > File size is 359 bytes
+                                   > File size is 147103 bytes
+                                   > File size is 68 bytes
+                                   > File size is 2655 bytes
+                                   > File size is 229 bytes
+                                   > File size is 2216288 bytes
+                                   > File size is 987613 bytes
+                                   > File size is 1186359 bytes
+                                   > File size is 299452 bytes
+                                   > File size is 1681872 bytes
+$ exit                               $ exit
+exit                                 exit
+== Line Differences ==
+ACTUAL  2) File size is 359 bytes
+ACTUAL  3) File size is 147103 bytes
+ACTUAL  4) File size is 68 bytes
+ACTUAL  5) File size is 2655 bytes
+ACTUAL  6) File size is 229 bytes
+ACTUAL  7) File size is 2216288 bytes
+ACTUAL  8) File size is 987613 bytes
+ACTUAL  9) File size is 1186359 bytes
+ACTUAL 10) File size is 299452 bytes
+ACTUAL 11) File size is 1681872 bytes

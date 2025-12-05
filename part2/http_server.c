@@ -56,10 +56,8 @@ void *worker_thread(void *arg) {
             read_error = 1;
         }
 
-        // TODO: COPIED FROM PART 1: DOUBLE CHECK
         if (!read_error) {
-            strcpy(resource_path, serve_dir);
-            strcat(resource_path, resource_name);
+            snprintf(resource_path, (strlen(serve_dir) + strlen(resource_name) + 1), "%s%s", serve_dir, resource_name);
         }
 
         if (write_http_response(fd, resource_path)) {
