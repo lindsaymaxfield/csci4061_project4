@@ -52,7 +52,9 @@ void *worker_thread(void *arg) {
         }
 
         if (read_http_request(fd, resource_name)) {
-            printf("Error from reading in worker thread\n");
+            if (!queue->shutdown) {
+                printf("Error from reading in worker thread\n");
+            }
             read_error = 1;
         }
 
@@ -61,7 +63,7 @@ void *worker_thread(void *arg) {
                      serve_dir, resource_name);
         }
 
-        if (write_http_response(fd, resource_path)) {
+        if (write_http_response(fd, resource_path) && !queue->shutdown) {
             printf("Error from writing in worker thread\n");
         }
 
