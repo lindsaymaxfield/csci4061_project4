@@ -208,7 +208,11 @@ int main(int argc, char **argv) {
             if (errno != EINTR) {
                 perror("accept");
             }
-            continue;
+            connection_queue_shutdown(&queue);
+            join_multiple_threads(0, N_THREADS, threads);
+            connection_queue_free(&queue);
+            close(sock_fd);
+            return 1;
         }
         if (connection_queue_enqueue(&queue, client_fd)) {
             printf("Enqueue error\n");
