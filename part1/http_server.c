@@ -34,7 +34,10 @@ int main(int argc, char **argv) {
     // Catch SIGINT so we can clean up properly
     struct sigaction sigact;
     sigact.sa_handler = handle_sigint;
-    sigfillset(&sigact.sa_mask);
+    if (sigfillset(&sigact.sa_mask) == -1) {
+        perror("sigfillset");
+        return 1;
+    }
     sigact.sa_flags = 0;    // No SA_RESTART
     if (sigaction(SIGINT, &sigact, NULL) == -1) {
         perror("sigaction");
