@@ -31,6 +31,7 @@ void *worker_thread(void *arg) {
     connection_queue_t *queue = arg;
     char resource_name[BUFSIZE];
     char resource_path[BUFSIZE];
+    int read_error = 0;
 
     while (1) {
         int fd = connection_queue_dequeue(queue);
@@ -42,11 +43,14 @@ void *worker_thread(void *arg) {
 
         if (read_http_request(fd, resource_name)) {
             printf("Error from reading in worker thread\n");
+            read_error = 1;
         }
 
         // TODO: COPIED FROM PART 1: DOUBLE CHECK
-        strcpy(resource_path, serve_dir);
-        strcat(resource_path, resource_name);
+        if (!read_error) {
+            strcpy(resource_path, serve_dir);
+            strcat(resource_path, resource_name);
+        }
 
         if (write_http_response(fd, resource_path)) {
             printf("Error from writing in worker thread\n");

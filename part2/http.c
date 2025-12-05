@@ -46,10 +46,15 @@ int read_http_request(int fd, char *resource_name) {
     }
 
     char *token =
-        strtok(buffer, " ");      // specify the string to parse for the first call to strtok
-    token = strtok(NULL, " ");    // call strtok again, this will have resource_name
-
-    // may need to error check to make sure token isn't NULL here?
+        strtok(buffer, " ");    // specify the string to parse for the first call to strtok
+    if (token != NULL) {
+        token = strtok(NULL, " ");    // call strtok again, this will have resource_name
+    }
+    if (token == NULL) {
+        // Reach this if either of the strtok calss was NULL
+        printf("strtok error\n");
+        return -1;
+    }
 
     strcpy(resource_name, token);
 
