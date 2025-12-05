@@ -65,7 +65,7 @@ int write_http_response(int fd, const char *resource_path) {
     // int capacity = 10;
     // strcpy(response, "HTTP/1.0 ");    // http response to build
     char *message = "";    // will hold either "404 Not Found" or "200 OK"
-    //char *endline = "\r\n";
+    // char *endline = "\r\n";
     int file_exists = 1;
 
     struct stat stat_buf;
@@ -151,7 +151,7 @@ int write_http_response(int fd, const char *resource_path) {
         // strcat(response, endline);
 
         int capacity = strlen("HTTP/1.0 \r\nContent-Type: \r\nContent-Length: \r\n\r\n") +
-                       strlen(message) + strlen(mime_type) + strlen(file_size);
+                       strlen(message) + strlen(mime_type) + strlen(file_size) + 1;
         char header[capacity];
 
         snprintf(header, capacity, "HTTP/1.0 %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n",
@@ -168,7 +168,7 @@ int write_http_response(int fd, const char *resource_path) {
 
         // Read the file in chunks and add to the response in chunks
         int num_bytes_read = 0;
-        //int total_bytes_read = 0;
+        // int total_bytes_read = 0;
         char buffer[BUFSIZE];
         while ((num_bytes_read = read(resource, buffer, BUFSIZE)) > 0) {
             // Write buffer to client
@@ -184,9 +184,9 @@ int write_http_response(int fd, const char *resource_path) {
                 free(response);
                 return -1;
             }*/
-            //capacity = capacity + num_bytes_read;
-            //strncat(response, buffer, num_bytes_read);
-            //total_bytes_read += num_bytes_read;
+            // capacity = capacity + num_bytes_read;
+            // strncat(response, buffer, num_bytes_read);
+            // total_bytes_read += num_bytes_read;
         }
         if (num_bytes_read == -1) {    // read error occurred
             perror("read");
@@ -194,15 +194,15 @@ int write_http_response(int fd, const char *resource_path) {
             // free(response);
             return -1;
         }
-        //printf("Total bytes read: %d\n", total_bytes_read);
+        // printf("Total bytes read: %d\n", total_bytes_read);
 
-        //printf("response size: %ld bytes\n", strlen(response));
+        // printf("response size: %ld bytes\n", strlen(response));
 
-        //FILE *debug_response = fopen("debug_response_out.txt", "w");
-        //fwrite(response, sizeof(char), strlen(response), debug_response);
-        //fclose(debug_response);
+        // FILE *debug_response = fopen("debug_response_out.txt", "w");
+        // fwrite(response, sizeof(char), strlen(response), debug_response);
+        // fclose(debug_response);
 
-        //printf("response size: %ld bytes\n", strlen(response));
+        // printf("response size: %ld bytes\n", strlen(response));
 
         // Write the response to the client
         /*if (write(fd, response, strlen(response)) == -1) {
@@ -215,7 +215,7 @@ int write_http_response(int fd, const char *resource_path) {
         // Close resource file
         if (close(resource) == -1) {
             perror("close");
-            //free(response);
+            // free(response);
             return -1;
         }
     } else {    // file does not exist
@@ -249,8 +249,7 @@ int write_http_response(int fd, const char *resource_path) {
         capacity = capacity + strlen(endline);
         strcat(response, endline);*/
 
-        int capacity = strlen("HTTP/1.0 \r\nContent-Length: 0\r\n\r\n") +
-                       strlen(message);
+        int capacity = strlen("HTTP/1.0 \r\nContent-Length: 0\r\n\r\n") + strlen(message);
         char header[capacity];
 
         snprintf(header, capacity, "HTTP/1.0 %s\r\nContent-Length: 0\r\n\r\n", message);
@@ -258,12 +257,12 @@ int write_http_response(int fd, const char *resource_path) {
         // Write the response to the client
         if (write(fd, header, strlen(header)) == -1) {
             perror("write");
-            //free(response);
+            // free(response);
             return -1;
         }
     }
 
-    //free(response);
+    // free(response);
 
     return 0;
 }
