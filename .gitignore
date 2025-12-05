@@ -7,6 +7,9 @@
 
 #ignore all text files
 *.txt
+*.pdf
+*.jpg
+*.png
 
 #ignore all .tmp files from tests
 *.tmp
