@@ -141,12 +141,9 @@ int main(int argc, char **argv) {
     while (keep_going) {
         int client_fd = accept(sock_fd, NULL, NULL);
         if (client_fd < 0) {
-            // if (errno == EINTR && keep_going) {
-            //     if (!keep_going)
-            //         break;    // SIGINT -> exit loop
-            //     continue;
-            // }
-            perror("accept");
+            if (errno != EINTR) {
+                perror("accept");
+            }
             break;
         }
         connection_queue_enqueue(&queue, client_fd);
