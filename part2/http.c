@@ -109,7 +109,6 @@ int write_http_response(int fd, const char *resource_path) {
         // off_t file_size = stat_buf.st_size;
         char file_size[12];                                            // idk why I did 12 yet
         snprintf(file_size, 12, "%d", (unsigned) stat_buf.st_size);    // convert st_size to string
-        printf("File size is %s bytes\n", file_size);
 
         // Add Content-Type line to response header
         /*response = realloc(

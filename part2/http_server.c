@@ -39,7 +39,6 @@ void *worker_thread(void *arg) {
             // exit if file descriptor is invalid and queue has shutdown
             break;
         }
-        printf("[worker] handling fd=%d\n", fd);
 
         if (read_http_request(fd, resource_name)) {
             printf("Error from reading in worker thread\n");
@@ -141,7 +140,6 @@ int main(int argc, char **argv) {
     // Main thread loop
     while (keep_going) {
         int client_fd = accept(sock_fd, NULL, NULL);
-        printf("[main] accepted client fd=%d\n", client_fd);
         if (client_fd < 0) {
             // if (errno == EINTR && keep_going) {
             //     if (!keep_going)
