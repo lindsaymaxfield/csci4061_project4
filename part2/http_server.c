@@ -21,12 +21,23 @@
 int keep_going = 1;
 const char *serve_dir;
 
+/**
+ * @brief Handler to shutdown server on SIGINT
+ *
+ * @details sets global variable "keep_going" to 0 which breaks out of main accept() loop
+ */
 void handle_sigint(int signo) {
     keep_going = 0;
 }
 
-// function for worker threads to perform
-// reads request and writes response
+/**
+ * @brief Worker thread function to parse http requests and send http responses
+ *
+ * @details Continually loops to get file descriptors from a shared (thread-safe) queue, reads the
+ * http request, finds the request resource, and writes an http response back
+ *
+ * @param arg should be a connection_queue_t pointer which stores client fds in a thread-safe manner
+ */
 void *worker_thread(void *arg) {
     connection_queue_t *queue = arg;
     char resource_name[BUFSIZE];
@@ -35,7 +46,7 @@ void *worker_thread(void *arg) {
 
     while (1) {
         int fd = connection_queue_dequeue(queue);
-        if (fd == -1 && queue->shutdown) {
+        if (fd == -1) {
             // exit if file descriptor is invalid and queue has shutdown
             break;
         }
@@ -61,22 +72,45 @@ void *worker_thread(void *arg) {
     return NULL;
 }
 
+/**
+ * @brief Helper function to cleanup threads on error
+ *
+ * @details iterates from start_val to end_val-1 and joins the thread at that index in threads.
+ * Calling join_multiple_threads(0, N_THREADS,...) will join all threads
+ *
+ * @param start_val initial index of thread to start joining (inclusive)
+ * @param end_val final index of iteration (exclusive)
+ */
+void join_multiple_threads(int start_val, int end_val, pthread_t threads[N_THREADS]) {
+    for (int j = start_val; j < end_val; j++) {
+        // pthread_join() not error checked because this function is only called during the cleanup
+        // of another error Final join loop only uses this function in the error case
+        pthread_join(threads[j], NULL);
+    }
+}
+
 int main(int argc, char **argv) {
     // First argument is directory to serve, second is port
     if (argc != 3) {
         printf("Usage: %s <directory> <port>\n", argv[0]);
         return 1;
     }
-    // Uncomment the lines below to use these definitions:
+
     serve_dir = argv[1];
     const char *port = argv[2];
 
-    // TODO Implement the rest of this function
-
+    // Signal handling
     sigset_t main_mask;      // set that stores current signal mask
     sigset_t worker_mask;    // set used to block signals to worker threads
-    sigfillset(&worker_mask);
-    sigprocmask(SIG_BLOCK, &worker_mask, &main_mask);    // block all signals to workers
+    if (sigfillset(&worker_mask)) {
+        perror("sigfillset");
+        return 1;
+    }
+    // block all signals to workers
+    if (sigprocmask(SIG_BLOCK, &worker_mask, &main_mask)) {
+        perror("sigprocmask");
+        return 1;
+    }
 
     // Create worker threads
     connection_queue_t queue;
@@ -87,12 +121,21 @@ int main(int argc, char **argv) {
         int ret_val = pthread_create(&threads[i], NULL, worker_thread, &queue);
         if (ret_val != 0) {
             fprintf(stderr, "error creating thread number %d: %s", i, strerror(ret_val));
+            connection_queue_shutdown(&queue);
+            join_multiple_threads(0, i, threads);
+            connection_queue_free(&queue);
             return 1;
         }
     }
 
-    // Revert to mask before creating threads
-    sigprocmask(SIG_SETMASK, &main_mask, NULL);
+    // Revert to mask from before creating threads, so main thread can receive signals
+    if (sigprocmask(SIG_SETMASK, &main_mask, NULL)) {
+        perror("sigprocmask");
+        connection_queue_shutdown(&queue);
+        join_multiple_threads(0, N_THREADS, threads);
+        connection_queue_free(&queue);
+        return 1;
+    }
 
     // Catch SIGINT so we can clean up properly
     struct sigaction sigact;
@@ -101,10 +144,11 @@ int main(int argc, char **argv) {
     sigact.sa_flags = 0;    // No SA_RESTART
     if (sigaction(SIGINT, &sigact, NULL) == -1) {
         perror("sigaction");
+        connection_queue_shutdown(&queue);
+        join_multiple_threads(0, N_THREADS, threads);
+        connection_queue_free(&queue);
         return 1;
     }
-
-    // TODO: TAKEN FROM PART 1; DOUBLE CHECK
 
     // Setup TCP Server
     struct addrinfo hints;
@@ -117,21 +161,34 @@ int main(int argc, char **argv) {
     int ret_val = getaddrinfo(NULL, port, &hints, &server);
     if (ret_val) {
         fprintf(stderr, "getaddrinfo failed: %s\n", gai_strerror(ret_val));
+        connection_queue_shutdown(&queue);
+        join_multiple_threads(0, N_THREADS, threads);
+        connection_queue_free(&queue);
+        return 1;
     }
-    int sock_fd =
-        socket(server->ai_family, server->ai_socktype, server->ai_protocol);    // TODO: error check
+    int sock_fd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
     if (sock_fd == -1) {
         perror("socket");
         freeaddrinfo(server);
+        connection_queue_shutdown(&queue);
+        join_multiple_threads(0, N_THREADS, threads);
+        connection_queue_free(&queue);
         return 1;
     }
     if (bind(sock_fd, server->ai_addr, server->ai_addrlen)) {
         perror("bind");
+        freeaddrinfo(server);
+        connection_queue_shutdown(&queue);
+        join_multiple_threads(0, N_THREADS, threads);
+        connection_queue_free(&queue);
         return 1;
     }
     if (listen(sock_fd, LISTEN_QUEUE_LEN)) {
         perror("listen");
         freeaddrinfo(server);
+        connection_queue_shutdown(&queue);
+        join_multiple_threads(0, N_THREADS, threads);
+        connection_queue_free(&queue);
         close(sock_fd);
         return 1;
     }
@@ -144,16 +201,29 @@ int main(int argc, char **argv) {
             if (errno != EINTR) {
                 perror("accept");
             }
-            break;
+            continue;
         }
-        connection_queue_enqueue(&queue, client_fd);
+        if (connection_queue_enqueue(&queue, client_fd)) {
+            printf("Enqueue error\n");
+            connection_queue_shutdown(&queue);
+            join_multiple_threads(0, N_THREADS, threads);
+            connection_queue_free(&queue);
+            close(client_fd);
+            close(sock_fd);
+            return 1;
+        }
     }
 
     // Once SIGINT has been sent
     close(sock_fd);
     connection_queue_shutdown(&queue);
     for (int i = 0; i < N_THREADS; i++) {
-        pthread_join(threads[i], NULL);
+        int result = pthread_join(threads[i], NULL);
+        if (result != 0) {
+            fprintf(stderr, "pthread_join failed: %s\n", strerror(result));
+            join_multiple_threads(i + 1, N_THREADS, threads);
+            return 1;
+        }
     }
     connection_queue_free(&queue);
 
