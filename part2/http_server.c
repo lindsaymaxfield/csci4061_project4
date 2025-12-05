@@ -38,14 +38,19 @@ void *worker_thread(void *arg) {
             // exit if file descriptor is invalid and queue has shutdown
             break;
         }
+        printf("[worker] handling fd=%d\n", fd);
 
-        read_http_request(fd, resource_name);
+        if (read_http_request(fd, resource_name)) {
+            printf("Error from reading in worker thread\n");
+        }
 
         // TODO: COPIED FROM PART 1: DOUBLE CHECK
         strcpy(resource_path, serve_dir);
         strcat(resource_path, resource_name);
 
-        write_http_response(fd, resource_path);
+        if (write_http_response(fd, resource_path)) {
+            printf("Error from writing in worker thread\n");
+        }
 
         close(fd);    // TODO: error check
     }
@@ -73,9 +78,14 @@ int main(int argc, char **argv) {
     // Create worker threads
     connection_queue_t queue;
     connection_queue_init(&queue);
+
     pthread_t threads[N_THREADS];
     for (int i = 0; i < N_THREADS; i++) {
-        pthread_create(&threads[i], NULL, worker_thread, &queue);
+        int ret_val = pthread_create(&threads[i], NULL, worker_thread, &queue);
+        if (ret_val != 0) {
+            fprintf(stderr, "error creating thread number %d: %s", i, strerror(ret_val));
+            return 1;
+        }
     }
 
     // Revert to mask before creating threads
@@ -110,7 +120,6 @@ int main(int argc, char **argv) {
     if (sock_fd == -1) {
         perror("socket");
         freeaddrinfo(server);
-        freeaddrinfo(&hints);
         return 1;
     }
     if (bind(sock_fd, server->ai_addr, server->ai_addrlen)) {
@@ -124,21 +133,30 @@ int main(int argc, char **argv) {
         return 1;
     }
     freeaddrinfo(server);
-    freeaddrinfo(&hints);
 
     // Main thread loop
     while (keep_going) {
         int client_fd = accept(sock_fd, NULL, NULL);
+        printf("[main] accepted client fd=%d\n", client_fd);
+        if (client_fd < 0) {
+            // if (errno == EINTR && keep_going) {
+            //     if (!keep_going)
+            //         break;    // SIGINT -> exit loop
+            //     continue;
+            // }
+            perror("accept");
+            break;
+        }
         connection_queue_enqueue(&queue, client_fd);
     }
 
     // Once SIGINT has been sent
+    close(sock_fd);
     connection_queue_shutdown(&queue);
     for (int i = 0; i < N_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
     connection_queue_free(&queue);
-    close(sock_fd);
 
     return 0;
 }
