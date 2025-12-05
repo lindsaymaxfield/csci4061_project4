@@ -50,12 +50,14 @@ int main(int argc, char **argv) {
 
     struct addrinfo *server;
 
+    // Assemble all of the necessary information for future system calls
     int ret_val = getaddrinfo(NULL, port, &hints, &server);
     if (ret_val != 0) {
         fprintf(stderr, "getaddrinfo failed: %s\n", gai_strerror(ret_val));
         return 1;
     }
 
+    // Create a new socket file descriptor
     int sock_fd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
     if (sock_fd == -1) {
         perror("socket");
@@ -63,7 +65,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // May need to add code to deal with binding to already taken port...we'll see
+    // Reserve a specific port (given as a command-line argument) for the server process
     if (bind(sock_fd, server->ai_addr, server->ai_addrlen) == -1) {
         perror("bind");
         freeaddrinfo(server);
@@ -71,6 +73,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Designate the socket file descriptor as a server socket
     if (listen(sock_fd, LISTEN_QUEUE_LEN) == -1) {
         perror("listen");
         freeaddrinfo(server);
@@ -82,7 +85,6 @@ int main(int argc, char **argv) {
 
     while (keep_going != 0) {
         // Wait to receive a connection request from client
-        //printf("Waiting for client to connect\n"); // For testing
         int client_fd = accept(sock_fd, NULL, NULL);
         if (client_fd == -1) {
             if (errno != EINTR) { // accept failed
@@ -93,7 +95,6 @@ int main(int argc, char **argv) {
                 break;
             }
         }
-        //printf("New client connected\n"); // For testing
 
         // Get resource name from client
         char resource_name[BUFSIZE];
@@ -104,10 +105,10 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        // Convert the requested resource name to a proper file path.
-        char resource_path[BUFSIZE];
-        strcpy(resource_path, serve_dir); // copies serve_dir to resource_path so that strcat() does not change serve_dir directly
-        strcat(resource_path, resource_name); // append resource_name to serve_dir and store in resource_path
+        // Convert the requested resource name to a proper file path
+        int path_length = strlen(serve_dir) + strlen(resource_name) + 1;
+        char resource_path[path_length];
+        snprintf(resource_path, path_length, "%s%s", serve_dir, resource_name);
 
         // Call write_http_response() providing the full path to the resource as an argument.
         if (write_http_response(client_fd, resource_path) == -1) {
@@ -116,7 +117,6 @@ int main(int argc, char **argv) {
             close(sock_fd);
             return 1;
         }
-
 
         if (close(client_fd) == -1) {
             perror("close");
