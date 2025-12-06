@@ -19,6 +19,7 @@
 #define N_THREADS 5
 
 int keep_going = 1;
+int sock_fd = -1;
 const char *serve_dir;
 
 /**
@@ -28,6 +29,10 @@ const char *serve_dir;
  */
 void handle_sigint(int signo) {
     keep_going = 0;
+    if (sock_fd != -1) {
+        close(sock_fd);
+        sock_fd = 1;
+    }
 }
 
 /**
@@ -173,7 +178,7 @@ int main(int argc, char **argv) {
         connection_queue_free(&queue);
         return 1;
     }
-    int sock_fd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
+    sock_fd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
     if (sock_fd == -1) {
         perror("socket");
         freeaddrinfo(server);
@@ -205,14 +210,19 @@ int main(int argc, char **argv) {
     while (keep_going) {
         int client_fd = accept(sock_fd, NULL, NULL);
         if (client_fd < 0) {
-            if (errno != EINTR) {
-                perror("accept");
+            if (errno == EINTR) {
+                continue;
             }
-            connection_queue_shutdown(&queue);
-            join_multiple_threads(0, N_THREADS, threads);
-            connection_queue_free(&queue);
-            close(sock_fd);
-            return 1;
+            // if (errno == EBADF || errno == EINVAL) {
+            //     break;
+            // }
+            perror("accept");
+            break;
+            // connection_queue_shutdown(&queue);
+            // join_multiple_threads(0, N_THREADS, threads);
+            // connection_queue_free(&queue);
+            // close(sock_fd);
+            // return 1;
         }
         if (connection_queue_enqueue(&queue, client_fd)) {
             printf("Enqueue error\n");
@@ -227,7 +237,7 @@ int main(int argc, char **argv) {
 
     // Once SIGINT has been sent
     connection_queue_shutdown(&queue);
-    close(sock_fd);
+    // close(sock_fd);
     for (int i = 0; i < N_THREADS; i++) {
         int result = pthread_join(threads[i], NULL);
         if (result != 0) {

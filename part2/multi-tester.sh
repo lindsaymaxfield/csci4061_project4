@@ -9,16 +9,20 @@ fi
 
 N=$1
 
-echo "Running 'make test' $N times..."
+echo "Running 'make test' $N times with increasing ports..."
 echo
 
-for ((i=1; i<=N; i++)); do
-    echo "=== Run $i ==="
+port=8000
 
-    # Capture output, extract 5th-to-last line
-    result=$(make test 2>&1)
+for ((i=1; i<=N; i++)); do
+    echo "=== Run $i (port=$port) ==="
+
+    # Run with port and capture output, get 5th-to-last line
+    result=$(make test port=$port 2>&1)
     fifth_last=$(echo "$result" | tail -n 5 | head -n 1)
 
     echo "$fifth_last"
     echo
+
+    port=$((port + 1))
 done

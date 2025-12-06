@@ -10,6 +10,9 @@ int connection_queue_init(connection_queue_t *queue) {
     queue->length = 0;
     queue->shutdown = 0;
 
+    for (int i = 0; i < CAPACITY; ++i)
+        queue->client_fds[i] = -1;
+
     pthread_mutex_init(&queue->lock, NULL);
     pthread_cond_init(&queue->queue_not_full, NULL);
     pthread_cond_init(&queue->queue_not_empty, NULL);
