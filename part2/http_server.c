@@ -63,7 +63,7 @@ void *worker_thread(void *arg) {
                      serve_dir, resource_name);
         }
 
-        if (write_http_response(fd, resource_path) && !queue->shutdown) {
+        if (write_http_response(fd, resource_path) && !queue->shutdown && errno != ECONNRESET) {
             printf("Error from writing in worker thread\n");
         }
 
