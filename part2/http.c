@@ -77,6 +77,14 @@ int read_http_request(int fd, char *resource_name) {
     }
 
     strcpy(resource_name, token);
+
+    // Ensure resource_name does not have extra \r or \n character due to unlucky thread scheduling
+    int request_length = strlen(resource_name);
+    while (request_length > 0 && (resource_name[request_length - 1] == '\n' ||
+                                  resource_name[request_length - 1] == '\r')) {
+        resource_name[request_length - 1] = '\0';
+        request_length--;
+    }
     return 0;
 }
 
