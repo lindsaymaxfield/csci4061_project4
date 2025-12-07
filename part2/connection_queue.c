@@ -51,7 +51,7 @@ int connection_queue_dequeue(connection_queue_t *queue) {
         pthread_cond_wait(&queue->queue_not_empty, &queue->lock);
     }
 
-    if (queue->length == 0 && queue->shutdown) {
+    if (queue->shutdown) {
         pthread_mutex_unlock(&queue->lock);
         return -1;
     }

@@ -29,10 +29,6 @@ const char *serve_dir;
  */
 void handle_sigint(int signo) {
     keep_going = 0;
-    // if (sock_fd != -1) {
-    //     close(sock_fd);
-    //     sock_fd = 1;
-    // }
 }
 
 /**
@@ -44,7 +40,7 @@ void handle_sigint(int signo) {
  * @param arg should be a connection_queue_t pointer which stores client fds in a thread-safe manner
  */
 void *worker_thread(void *arg) {
-    connection_queue_t *queue = arg;
+    connection_queue_t *queue = (connection_queue_t *) arg;
     char resource_name[BUFSIZE];
     char resource_path[BUFSIZE];
     // int read_error = 0;
@@ -223,7 +219,7 @@ int main(int argc, char **argv) {
             connection_queue_shutdown(&queue);
             join_multiple_threads(0, N_THREADS, threads);
             connection_queue_free(&queue);
-            close(client_fd);
+            // close(client_fd);
             close(sock_fd);
             return 1;
         }
