@@ -41,12 +41,7 @@ const char *get_file_extension(const char *resource_path) {
 }
 
 int read_http_request(int fd, char *resource_name) {
-    char buffer[BUFSIZE];
-
-    if (read(fd, buffer, BUFSIZE) == -1) {
-        perror("read");
-        return -1;
-    }
+    char buffer[BUFSIZE] = {0};
 
     int total_bytes_read = 0;
     int amount_to_read = BUFSIZE;
@@ -117,7 +112,6 @@ int write_http_response(int fd, const char *resource_path) {
             snprintf(NULL, 0, "HTTP/1.0 %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n",
                      message, mime_type, file_size) +
             1;
-
         char header[capacity];
 
         // Put together header for writing to the client
