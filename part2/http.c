@@ -47,7 +47,25 @@ int read_http_request(int fd, char *resource_name) {
         perror("read");
         return -1;
     }
-
+    
+    int total_bytes_read = 0;
+    int amount_to_read = BUFSIZE;
+    while(!strstr(buffer, "\r\n\r\n")){ //Read until "\r\n\r\n" to handle when request is not in a single packet
+      int bytes_read = read(fd, buffer + total_bytes_read, amount_to_read);
+      
+      if(bytes_read == -1){
+        perror("read");
+        return -1;
+      }
+      
+      total_bytes_read += bytes_read;
+      amount_to_read = BUFSIZE - total_bytes_read - 1;
+      
+      return 0;
+      
+    }
+    
+  
     char *token =
         strtok(buffer, " ");    // specify the string to parse for the first call to strtok
     if (token != NULL) {
@@ -121,14 +139,23 @@ int write_http_response(int fd, const char *resource_path) {
         char buffer[BUFSIZE];
         while ((num_bytes_read = read(resource, buffer, BUFSIZE)) > 0) {
             // Write buffer to client
-            if (write(fd, buffer, num_bytes_read) == -1) {
-                if (errno != ECONNRESET) {
-                    // If peer resets on shutdown, do not print error message
-                    perror("write");
+            long total_written = 0;
+            long amount_to_write = 0;
+            while(total_written < num_bytes_read){
+              amount_to_write = num_bytes_read - total_written;
+              long bytes_written = write(fd, buffer + total_written, amount_to_write);
+              
+              if(bytes_written == -1){
+                if(errno != ECONNRESET){
+                //Peer resetting on shutdown is expected
+                  perror("write");
                 }
                 close(resource);
                 return -1;
+              }
+              total_written += bytes_written;
             }
+            
         }
         if (num_bytes_read == -1) {    // read error occurred
             if (errno != ECONNRESET) {
