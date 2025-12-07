@@ -106,7 +106,11 @@ int main(int argc, char **argv) {
 
     // Create worker threads
     connection_queue_t queue;
-    connection_queue_init(&queue);
+    if (connection_queue_init(&queue)) {
+        // error message printed in connection_queue_init()
+        // no need to free connection queue
+        return 1;
+    }
 
     // Catch SIGINT so we can clean up properly
     struct sigaction sigact;
@@ -171,11 +175,17 @@ int main(int argc, char **argv) {
     sigset_t worker_mask;    // set used to block signals to worker threads
     if (sigfillset(&worker_mask)) {
         perror("sigfillset");
+        connection_queue_shutdown(&queue);
+        connection_queue_free(&queue);
+        close(sock_fd);
         return 1;
     }
     // block all signals to workers
     if (sigprocmask(SIG_BLOCK, &worker_mask, &main_mask)) {
         perror("sigprocmask");
+        connection_queue_shutdown(&queue);
+        connection_queue_free(&queue);
+        close(sock_fd);
         return 1;
     }
 
@@ -187,6 +197,7 @@ int main(int argc, char **argv) {
             connection_queue_shutdown(&queue);
             join_multiple_threads(0, i, threads);
             connection_queue_free(&queue);
+            close(sock_fd);
             return 1;
         }
     }
@@ -197,6 +208,7 @@ int main(int argc, char **argv) {
         connection_queue_shutdown(&queue);
         join_multiple_threads(0, N_THREADS, threads);
         connection_queue_free(&queue);
+        close(sock_fd);
         return 1;
     }
 
@@ -215,19 +227,36 @@ int main(int argc, char **argv) {
             return 1;
         }
         if (connection_queue_enqueue(&queue, client_fd)) {
-            printf("Enqueue error\n");
             connection_queue_shutdown(&queue);
             join_multiple_threads(0, N_THREADS, threads);
             connection_queue_free(&queue);
-            // close(client_fd);
+            close(client_fd);
+            close(sock_fd);
+            return 1;
+        }
+        if (close(client_fd) == -1) {
+            perror("close");
+            connection_queue_shutdown(&queue);
+            join_multiple_threads(0, N_THREADS, threads);
+            connection_queue_free(&queue);
             close(sock_fd);
             return 1;
         }
     }
 
     // Once SIGINT has been sent
-    connection_queue_shutdown(&queue);    // TODO error check
-    close(sock_fd);                       // TODO error check
+    if (connection_queue_shutdown(&queue)) {
+        join_multiple_threads(0, N_THREADS, threads);
+        connection_queue_free(&queue);
+        close(sock_fd);
+        return 1;
+    }
+    if (close(sock_fd)) {
+        perror("close");
+        join_multiple_threads(0, N_THREADS, threads);
+        connection_queue_free(&queue);
+        return 1;
+    }
     for (int i = 0; i < N_THREADS; i++) {
         int result = pthread_join(threads[i], NULL);
         if (result != 0) {
@@ -237,7 +266,10 @@ int main(int argc, char **argv) {
             return 1;
         }
     }
-    connection_queue_free(&queue);    // TODO error check
+    if (connection_queue_free(&queue)) {
+        // error message printed in connection_queue_free()
+        return 1;
+    }
 
     return 0;
 }

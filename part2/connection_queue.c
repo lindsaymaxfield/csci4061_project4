@@ -13,23 +13,44 @@ int connection_queue_init(connection_queue_t *queue) {
     for (int i = 0; i < CAPACITY; ++i)
         queue->client_fds[i] = -1;
 
-    pthread_mutex_init(&queue->lock, NULL);
-    pthread_cond_init(&queue->queue_not_full, NULL);
-    pthread_cond_init(&queue->queue_not_empty, NULL);
+    if (pthread_mutex_init(&queue->lock, NULL)) {
+        perror("pthread_mutex_init");
+        return -1;
+    }
+    if (pthread_cond_init(&queue->queue_not_full, NULL)) {
+        perror("pthread_cond_init");
+        pthread_mutex_destroy(&queue->lock);
+        return -1;
+    }
+    if (pthread_cond_init(&queue->queue_not_empty, NULL)) {
+        perror("ptread_cond_init");
+        pthread_mutex_destroy(&queue->lock);
+        pthread_cond_destroy(&queue->queue_not_full);
+        return -1;
+    }
 
     return 0;
 }
 
 int connection_queue_enqueue(connection_queue_t *queue, int connection_fd) {
     // TODO Implement Shutdown
-    pthread_mutex_lock(&queue->lock);
+    if (pthread_mutex_lock(&queue->lock)) {
+        perror("pthread_mutex_lock");
+        return -1;
+    }
 
     while (queue->length == CAPACITY && !queue->shutdown) {
-        pthread_cond_wait(&queue->queue_not_full, &queue->lock);
+        if (pthread_cond_wait(&queue->queue_not_full, &queue->lock)) {
+            perror("pthread_cond_wait");
+            pthread_mutex_unlock(&queue->lock);
+            return -1;
+        }
     }
 
     if (queue->shutdown) {
-        pthread_mutex_unlock(&queue->lock);
+        if (pthread_mutex_unlock(&queue->lock)) {
+            perror("pthread_mutex_unlock");
+        }
         return -1;
     }
 
@@ -37,22 +58,38 @@ int connection_queue_enqueue(connection_queue_t *queue, int connection_fd) {
     queue->write_idx = (queue->write_idx + 1) % CAPACITY;
     queue->length++;
 
-    pthread_cond_signal(&queue->queue_not_empty);
-    pthread_mutex_unlock(&queue->lock);
+    if (pthread_cond_signal(&queue->queue_not_empty)) {
+        perror("pthread_cond_signal");
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
+    }
+    if (pthread_mutex_unlock(&queue->lock)) {
+        perror("pthread_mutex_unlock");
+        return -1;
+    }
 
     return 0;
 }
 
 int connection_queue_dequeue(connection_queue_t *queue) {
     // TODO: Implement shutdown
-    pthread_mutex_lock(&queue->lock);
+    if (pthread_mutex_lock(&queue->lock)) {
+        perror("pthread_mutex_lock");
+        return -1;
+    }
 
     while (queue->length == 0 && !queue->shutdown) {
-        pthread_cond_wait(&queue->queue_not_empty, &queue->lock);
+        if (pthread_cond_wait(&queue->queue_not_empty, &queue->lock)) {
+            perror("pthread_cond_wait");
+            pthread_mutex_unlock(&queue->lock);
+            return -1;
+        }
     }
 
     if (queue->shutdown) {
-        pthread_mutex_unlock(&queue->lock);
+        if (pthread_mutex_unlock(&queue->lock)) {
+            perror("pthread_mutex_unlock");
+        }
         return -1;
     }
 
@@ -60,29 +97,62 @@ int connection_queue_dequeue(connection_queue_t *queue) {
     queue->length--;
     queue->read_idx = (queue->read_idx + 1) % CAPACITY;
 
-    pthread_cond_signal(&queue->queue_not_full);
-    pthread_mutex_unlock(&queue->lock);
+    if (pthread_cond_signal(&queue->queue_not_full)) {
+        perror("pthread_cond_signal");
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
+    }
+    if (pthread_mutex_unlock(&queue->lock)) {
+        perror("pthread_mutex_unlock");
+        return -1;
+    }
 
     return retval;
 }
 
 int connection_queue_shutdown(connection_queue_t *queue) {
     // TODO Not yet implemented
-    pthread_mutex_lock(&queue->lock);
+    if (pthread_mutex_lock(&queue->lock)) {
+        perror("pthread_mutex_lock");
+        return -1;
+    }
     queue->shutdown = 1;
     // send both signals to wake up all blocked threads
-    pthread_cond_broadcast(&queue->queue_not_full);
-    pthread_cond_broadcast(&queue->queue_not_empty);
-    pthread_mutex_unlock(&queue->lock);
+    if (pthread_cond_broadcast(&queue->queue_not_full)) {
+        perror("pthread_cond_broadcast");
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
+    }
+    if (pthread_cond_broadcast(&queue->queue_not_empty)) {
+        perror("pthread_cond_broadcast");
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
+    }
+    if (pthread_mutex_unlock(&queue->lock)) {
+        perror("pthread_mutex_unlock");
+        return -1;
+    }
 
     return 0;
 }
 
 int connection_queue_free(connection_queue_t *queue) {
     // TODO Not yet implemented
-    pthread_mutex_destroy(&queue->lock);
-    pthread_cond_destroy(&queue->queue_not_empty);
-    pthread_cond_destroy(&queue->queue_not_full);
+    if (pthread_mutex_destroy(&queue->lock)) {
+        perror("pthread_mutex_destroy");
+        pthread_cond_destroy(&queue->queue_not_empty);
+        pthread_cond_destroy(&queue->queue_not_full);
+        return -1;
+    }
+    if (pthread_cond_destroy(&queue->queue_not_empty)) {
+        perror("pthread_cond_destroy");
+        pthread_cond_destroy(&queue->queue_not_full);
+        return -1;
+    }
+    if (pthread_cond_destroy(&queue->queue_not_full)) {
+        perror("pthread_mutex_destroy");
+        return -1;
+    }
 
     return 0;
 }
