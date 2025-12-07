@@ -22,11 +22,6 @@ int keep_going = 1;
 int sock_fd = -1;
 const char *serve_dir;
 
-// Coordination to stop curl (7): Connection refused on startup
-pthread_mutex_t ready_lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t ready_cond = PTHREAD_COND_INITIALIZER;
-int ready_count = 0;    // waits until all 5 threads are ready to enter their loops
-
 /**
  * @brief Handler to shutdown server on SIGINT
  *
@@ -49,21 +44,6 @@ void *worker_thread(void *arg) {
     char resource_name[BUFSIZE];
     char resource_path[BUFSIZE];
     // int read_error = 0;
-
-    pthread_mutex_lock(&ready_lock);
-    ready_count++;
-
-    if (ready_count == N_THREADS) {
-        // last thread to arrive wakes everyone
-        pthread_cond_broadcast(&ready_cond);
-    } else {
-        // all other threads wait
-        while (ready_count < N_THREADS) {
-            pthread_cond_wait(&ready_cond, &ready_lock);
-        }
-    }
-
-    pthread_mutex_unlock(&ready_lock);
 
     while (keep_going) {
         int fd = connection_queue_dequeue(queue);
@@ -219,11 +199,6 @@ int main(int argc, char **argv) {
         connection_queue_free(&queue);
         return 1;
     }
-
-    pthread_mutex_lock(&ready_lock);
-    while (ready_count < N_THREADS)
-        pthread_cond_wait(&ready_cond, &ready_lock);
-    pthread_mutex_unlock(&ready_lock);
 
     // Main thread loop
     while (keep_going) {
