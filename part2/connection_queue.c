@@ -44,26 +44,24 @@ int connection_queue_enqueue(connection_queue_t *queue, int connection_fd) {
 }
 
 int connection_queue_dequeue(connection_queue_t *queue) {
-    // TODO: Implement shutdown
     pthread_mutex_lock(&queue->lock);
 
-    while (queue->length == 0 && !queue->shutdown) {
+    while (queue->length == 0 && !queue->shutdown)
         pthread_cond_wait(&queue->queue_not_empty, &queue->lock);
-    }
 
-    if (queue->shutdown) {
+    // Only exit if no work to do
+    if (queue->length == 0 && queue->shutdown) {
         pthread_mutex_unlock(&queue->lock);
         return -1;
     }
 
-    int retval = queue->client_fds[queue->read_idx];
-    queue->length--;
+    int fd = queue->client_fds[queue->read_idx];
     queue->read_idx = (queue->read_idx + 1) % CAPACITY;
+    queue->length--;
 
     pthread_cond_signal(&queue->queue_not_full);
     pthread_mutex_unlock(&queue->lock);
-
-    return retval;
+    return fd;
 }
 
 int connection_queue_shutdown(connection_queue_t *queue) {
