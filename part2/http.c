@@ -144,17 +144,17 @@ int write_http_response(int fd, const char *resource_path) {
         }
 
         // Read the file in chunks and write to the client in chunks
-        int num_bytes_read = 0;
-        char buffer[BUFSIZE] = {0};
+        ssize_t num_bytes_read = 0;
+        char buffer[BUFSIZE];
         while ((num_bytes_read = read(resource, buffer, BUFSIZE)) > 0) {
             // Write buffer to client
-            long total_written = 0;
-            long amount_to_write = 0;
+            ssize_t total_written = 0;
+            ssize_t amount_to_write = 0;
             while (total_written < num_bytes_read) {
                 amount_to_write = num_bytes_read - total_written;
-                long bytes_written = write(fd, buffer + total_written, amount_to_write);
+                ssize_t bytes_written = write(fd, buffer + total_written, amount_to_write);
 
-                if (bytes_written == -1) {
+                if (bytes_written < 0) {
                     if (errno != ECONNRESET) {
                         // Peer resetting on shutdown is expected
                         perror("write");
