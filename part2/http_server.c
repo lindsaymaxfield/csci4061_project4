@@ -251,18 +251,21 @@ int main(int argc, char **argv) {
     }
 
     // Once SIGINT has been sent
-    connection_queue_shutdown(&queue);    // TODO error check
-    close(sock_fd);                       // TODO error check
+    int return_value = 0;
+    return_value = connection_queue_shutdown(&queue);
+    return_value = close(sock_fd);
     for (int i = 0; i < N_THREADS; i++) {
         int result = pthread_join(threads[i], NULL);
         if (result != 0) {
             fprintf(stderr, "pthread_join failed: %s\n", strerror(result));
             join_multiple_threads(i + 1, N_THREADS, threads);
-            connection_queue_free(&queue);
-            return 1;
+            return_value = 1;
         }
     }
-    connection_queue_free(&queue);    // TODO error check
+    return_value = connection_queue_free(&queue);    // TODO error check
 
+    if (return_value) {
+        return 1;
+    }
     return 0;
 }
