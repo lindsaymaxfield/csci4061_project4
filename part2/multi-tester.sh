@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Usage: ./run_tests.sh <num_runs>
+# Usage: ./run_tests.sh <num_runs> <init_port>
 
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <number_of_runs>"
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <number_of_runs> <init_port>"
     exit 1
 fi
 
@@ -15,7 +15,7 @@ mkdir -p "$OUTPUT_DIR"
 echo "Running 'make test' $N times and skipping ports that return curl (7) errors..."
 echo
 
-port=8000
+port=$2
 
 for ((i=1; i<=N; i++)); do
 

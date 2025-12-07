@@ -15,7 +15,7 @@
 #include "http.h"
 
 #define BUFSIZE 512
-#define LISTEN_QUEUE_LEN 5
+#define LISTEN_QUEUE_LEN 128
 #define N_THREADS 5
 
 int keep_going = 1;
@@ -52,14 +52,18 @@ void *worker_thread(void *arg) {
 
     pthread_mutex_lock(&ready_lock);
     ready_count++;
-    pthread_cond_signal(&ready_cond);
-    pthread_mutex_unlock(&ready_lock);
 
-    while (1) {
-        if (ready_count == N_THREADS) {
-            break;
+    if (ready_count == N_THREADS) {
+        // last thread to arrive wakes everyone
+        pthread_cond_broadcast(&ready_cond);
+    } else {
+        // all other threads wait
+        while (ready_count < N_THREADS) {
+            pthread_cond_wait(&ready_cond, &ready_lock);
         }
     }
+
+    pthread_mutex_unlock(&ready_lock);
 
     while (keep_going) {
         int fd = connection_queue_dequeue(queue);
@@ -73,18 +77,18 @@ void *worker_thread(void *arg) {
             printf("Error from reading in worker thread\n");
             //}
             close(fd);
-            break;
+            continue;
         }
 
         // if (!read_error) {
-        snprintf(resource_path, (strlen(serve_dir) + strlen(resource_name) + 1), "%s%s", serve_dir,
-                 resource_name);
+        snprintf(resource_path, BUFSIZE, "%s%s", serve_dir, resource_name);
+
         //}
 
         if (write_http_response(fd, resource_path)) {
             printf("Error from writing in worker thread\n");
             close(fd);
-            break;
+            continue;
         }
 
         close(fd);    // TODO: error check
