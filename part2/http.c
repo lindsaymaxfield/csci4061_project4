@@ -42,34 +42,41 @@ const char *get_file_extension(const char *resource_path) {
 
 int read_http_request(int fd, char *resource_name) {
     char buffer[BUFSIZE] = {0};
-
     int total_bytes_read = 0;
-    int amount_to_read = BUFSIZE;
-    // Read until "\r\n\r\n" to handle when request is not in a single packet
-    while (!strstr(buffer, "\r\n\r\n")) {
-        int bytes_read = read(fd, buffer + total_bytes_read, amount_to_read);
 
-        if (bytes_read == -1) {
+    // continue reading until "\r\n\r\n" found
+    // This ensures that the full header is always read even if read doesn't consume the expected
+    // number of bytes
+    while (1) {
+        int bytes_read = read(fd, buffer + total_bytes_read, BUFSIZE - total_bytes_read - 1);
+
+        if (bytes_read < 0) {
             perror("read");
             return -1;
         }
+        if (bytes_read == 0)
+            break;    // client closed early
 
         total_bytes_read += bytes_read;
-        amount_to_read = BUFSIZE - total_bytes_read - 1;
+        buffer[total_bytes_read] = '\0';    // Null termination so next call to strstr is safe
+
+        // stop when the "\r\n\r\n" is detected
+        if (strstr(buffer, "\r\n\r\n") != NULL) {
+            break;
+        }
     }
 
-    char *token =
-        strtok(buffer, " ");    // specify the string to parse for the first call to strtok
+    char *token = strtok(buffer, " ");
     if (token != NULL) {
-        token = strtok(NULL, " ");    // call strtok again, this will have resource_name
+        token = strtok(NULL, " ");
     }
+
     if (token == NULL) {
         fprintf(stderr, "strtok error\n");
         return -1;
     }
 
     strcpy(resource_name, token);
-
     return 0;
 }
 
