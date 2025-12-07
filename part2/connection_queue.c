@@ -79,14 +79,30 @@ int connection_queue_enqueue(connection_queue_t *queue, int connection_fd) {
 }
 
 int connection_queue_dequeue(connection_queue_t *queue) {
-    pthread_mutex_lock(&queue->lock);
+    int error_code = 0;
+    error_code = pthread_mutex_lock(&queue->lock);
+    if (error_code) {
+        fprintf(stderr, "pthread_mutex_lock: %s\n", strerror(error_code));
+        // Clean up handled by caller in htpp_server
+        return -1;
+    }
 
-    while (queue->length == 0 && !queue->shutdown)
-        pthread_cond_wait(&queue->queue_not_empty, &queue->lock);
+    while (queue->length == 0 && !queue->shutdown) {
+        error_code = pthread_cond_wait(&queue->queue_not_empty, &queue->lock);
+        if (error_code) {
+            fprintf(stderr, "pthread_cond_wait: %s\n", strerror(error_code));
+            pthread_mutex_unlock(&queue->lock);
+            return -1;
+        }
+    }
 
     // Only exit if no work to do
     if (queue->length == 0 && queue->shutdown) {
-        pthread_mutex_unlock(&queue->lock);
+        error_code = pthread_mutex_unlock(&queue->lock);
+        if (error_code) {
+            fprintf(stderr, "pthread_mutex_unlock: %s\n", strerror(error_code));
+            return -1;
+        }
         return -1;
     }
 
@@ -94,28 +110,70 @@ int connection_queue_dequeue(connection_queue_t *queue) {
     queue->read_idx = (queue->read_idx + 1) % CAPACITY;
     queue->length--;
 
-    pthread_cond_signal(&queue->queue_not_full);
-    pthread_mutex_unlock(&queue->lock);
+    error_code = pthread_cond_signal(&queue->queue_not_full);
+    if (error_code) {
+        fprintf(stderr, "pthread_cond_signal: %s\n", strerror(error_code));
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
+    }
+
+    error_code = pthread_mutex_unlock(&queue->lock);
+    if (error_code) {
+        fprintf(stderr, "pthread_mutex_unlock: %s\n", strerror(error_code));
+        return -1;
+    }
     return fd;
 }
 
 int connection_queue_shutdown(connection_queue_t *queue) {
-    // TODO Not yet implemented
-    pthread_mutex_lock(&queue->lock);
+    int error_code = 0;
+    error_code = pthread_mutex_lock(&queue->lock);
+    if (error_code) {
+        fprintf(stderr, "pthread_mutex_lock: %s\n", strerror(error_code));
+        // Clean up handled by caller in htpp_server
+        return -1;
+    }
     queue->shutdown = 1;
     // send both signals to wake up all blocked threads
-    pthread_cond_broadcast(&queue->queue_not_full);
-    pthread_cond_broadcast(&queue->queue_not_empty);
-    pthread_mutex_unlock(&queue->lock);
+    error_code = pthread_cond_broadcast(&queue->queue_not_full);
+    if (error_code) {
+        fprintf(stderr, "pthread_cond_broadcast: %s\n", strerror(error_code));
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
+    }
+    error_code = pthread_cond_broadcast(&queue->queue_not_empty);
+    if (error_code) {
+        fprintf(stderr, "pthread_cond_broadcast: %s\n", strerror(error_code));
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
+    }
+
+    error_code = pthread_mutex_unlock(&queue->lock);
+    if (error_code) {
+        fprintf(stderr, "pthread_mutex_unlock: %s\n", strerror(error_code));
+        return -1;
+    }
 
     return 0;
 }
 
 int connection_queue_free(connection_queue_t *queue) {
-    // TODO Not yet implemented
-    pthread_mutex_destroy(&queue->lock);
-    pthread_cond_destroy(&queue->queue_not_empty);
-    pthread_cond_destroy(&queue->queue_not_full);
+    int error_code = 0;
+    error_code = pthread_mutex_destroy(&queue->lock);
+    if (error_code) {
+        fprintf(stderr, "pthread_mutex_destroy: %s\n", strerror(error_code));
+        return -1;
+    }
+    error_code = pthread_cond_destroy(&queue->queue_not_empty);
+    if (error_code) {
+        fprintf(stderr, "pthread_cond_destroy: %s\n", strerror(error_code));
+        return -1;
+    }
+    error_code = pthread_cond_destroy(&queue->queue_not_full);
+    if (error_code) {
+        fprintf(stderr, "pthread_cond_destroy: %s\n", strerror(error_code));
+        return -1;
+    }
 
     return 0;
 }
