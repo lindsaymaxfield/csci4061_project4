@@ -57,7 +57,7 @@ void *worker_thread(void *arg) {
             printf("Error from reading in worker thread\n");
             //}
             close(fd);
-            break;
+            continue;
         }
 
         // if (!read_error) {
@@ -68,7 +68,7 @@ void *worker_thread(void *arg) {
         if (write_http_response(fd, resource_path)) {
             printf("Error from writing in worker thread\n");
             close(fd);
-            break;
+            continue;
         }
 
         close(fd);    // TODO: error check
