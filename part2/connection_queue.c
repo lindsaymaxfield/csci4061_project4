@@ -13,23 +13,48 @@ int connection_queue_init(connection_queue_t *queue) {
     for (int i = 0; i < CAPACITY; ++i)
         queue->client_fds[i] = -1;
 
-    pthread_mutex_init(&queue->lock, NULL);
-    pthread_cond_init(&queue->queue_not_full, NULL);
-    pthread_cond_init(&queue->queue_not_empty, NULL);
+    pthread_mutex_init(&queue->lock, NULL);    // mutex_init does not return errors
+
+    int error_code = 0;
+    if ((error_code = pthread_cond_init(&queue->queue_not_full, NULL))) {
+        fprintf(stderr, "pthread_cond_init: %s\n", strerror(error_code));
+        pthread_mutex_destroy(&queue->lock);
+        return -1;
+    }
+    if ((error_code = pthread_cond_init(&queue->queue_not_empty, NULL))) {
+        fprintf(stderr, "pthread_cond_init: %s\n", strerror(error_code));
+        pthread_mutex_destroy(&queue->lock);
+        pthread_cond_destroy(&queue->queue_not_full);
+        return -1;
+    }
 
     return 0;
 }
 
 int connection_queue_enqueue(connection_queue_t *queue, int connection_fd) {
     // TODO Implement Shutdown
-    pthread_mutex_lock(&queue->lock);
+    int error_code = 0;
+    error_code = pthread_mutex_lock(&queue->lock);
+    if (error_code) {
+        fprintf(stderr, "pthread_mutex_lock: %s\n", strerror(error_code));
+        // Clean up handled by caller in htpp_server
+        return -1;
+    }
 
     while (queue->length == CAPACITY && !queue->shutdown) {
-        pthread_cond_wait(&queue->queue_not_full, &queue->lock);
+        error_code = pthread_cond_wait(&queue->queue_not_full, &queue->lock);
+        if (error_code) {
+            fprintf(stderr, "pthread_cond_wait: %s\n", strerror(error_code));
+            pthread_mutex_unlock(&queue->lock);
+            return -1;
+        }
     }
 
     if (queue->shutdown) {
-        pthread_mutex_unlock(&queue->lock);
+        error_code = pthread_mutex_unlock(&queue->lock);
+        if (error_code) {
+            fprintf(stderr, "pthread_mutex_unlock: %s\n", strerror(error_code));
+        }
         return -1;
     }
 
@@ -37,8 +62,18 @@ int connection_queue_enqueue(connection_queue_t *queue, int connection_fd) {
     queue->write_idx = (queue->write_idx + 1) % CAPACITY;
     queue->length++;
 
-    pthread_cond_signal(&queue->queue_not_empty);
-    pthread_mutex_unlock(&queue->lock);
+    error_code = pthread_cond_signal(&queue->queue_not_empty);
+    if (error_code) {
+        fprintf(stderr, "pthread_cond_signal: %s\n", strerror(error_code));
+        pthread_mutex_unlock(&queue->lock);
+        return -1;
+    }
+
+    error_code = pthread_mutex_unlock(&queue->lock);
+    if (error_code) {
+        fprintf(stderr, "pthread_mutex_unlock: %s\n", strerror(error_code));
+        return -1;
+    }
 
     return 0;
 }
