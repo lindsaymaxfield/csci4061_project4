@@ -25,7 +25,6 @@ for ((i=1; i<=N; i++)); do
         curl_status=$?
 
         if [ $curl_status -eq 7 ]; then
-            # No server responding → safe to use this port
             break
         else
             echo "Port $port appears active (curl exit=$curl_status) — trying next..."
@@ -39,10 +38,17 @@ for ((i=1; i<=N; i++)); do
     # Run test and save full output
     make test port=$port > "$output_file" 2>&1
 
-    # Show 5th-from-last line
+    # Get the 5th-to-last line
     fifth_last=$(tail -n 5 "$output_file" | head -n 1)
     echo "$fifth_last"
     echo
+
+    # If the line does NOT contain the word "Passed", append "_failed"
+    if [[ "$fifth_last" != *"Passed"* ]]; then
+        failed_file="${output_file%.txt}_failed.txt"
+        mv "$output_file" "$failed_file"
+        output_file="$failed_file"
+    fi
 
     port=$((port + 1))
 done
