@@ -48,8 +48,8 @@ int main(int argc, char **argv) {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM; // TCP
-    hints.ai_flags = AI_PASSIVE;    // Will be acting as a server
+    hints.ai_socktype = SOCK_STREAM;    // TCP
+    hints.ai_flags = AI_PASSIVE;        // Will be acting as a server
 
     struct addrinfo *server;
 
@@ -90,11 +90,11 @@ int main(int argc, char **argv) {
         // Wait to receive a connection request from client
         int client_fd = accept(sock_fd, NULL, NULL);
         if (client_fd == -1) {
-            if (errno != EINTR) { // accept failed
+            if (errno != EINTR) {    // accept failed
                 perror("accept");
                 close(sock_fd);
                 return 1;
-            } else { // need to shut down server since accept() was interrupted by a signal
+            } else {    // need to shut down server since accept() was interrupted by a signal
                 break;
             }
         }

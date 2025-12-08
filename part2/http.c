@@ -55,7 +55,9 @@ int read_http_request(int fd, char *resource_name) {
     char buffer[BUFSIZE];
 
     if (read(fd, buffer, BUFSIZE) == -1) {
-        perror("read");
+        if (errno != EINTR) {
+            perror("read");
+        }
         return -1;
     }
 

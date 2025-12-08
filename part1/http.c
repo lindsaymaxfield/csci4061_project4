@@ -40,11 +40,24 @@ const char *get_file_extension(const char *resource_path) {
     return extension;    // will either return the file extension or NULL if '.' was not found
 }
 
+/**
+ * @brief Consumes an http request and outputs the name of the request resource to resource_name
+ *
+ * @details Reads from TCP client file descriptor, tokenizes string and copies the name of the
+ * resource into resource_name
+ *
+ * @param fd file descriptor from an accept() call
+ * @param resource_name pointer to store the name of the requested resource in a character array
+ *
+ * @return 0 on success, -1 on error
+ */
 int read_http_request(int fd, char *resource_name) {
     char buffer[BUFSIZE];
 
     if (read(fd, buffer, BUFSIZE) == -1) {
-        perror("read");
+        if (errno != EINTR) {
+            perror("read");
+        }
         return -1;
     }
 
@@ -54,7 +67,7 @@ int read_http_request(int fd, char *resource_name) {
         token = strtok(NULL, " ");    // call strtok again, this will have resource_name
     }
     if (token == NULL) {
-        fprintf(stderr, "strtok\n");
+        fprintf(stderr, "strtok error\n");
         return -1;
     }
 
@@ -63,6 +76,18 @@ int read_http_request(int fd, char *resource_name) {
     return 0;
 }
 
+/**
+ * @brief writes a full HTTP response to send a requested resource to a client
+ *
+ * @details Checks if the file exists, if it does, it sets up a string of the right size for the
+ * header then writes the header. Then it begins reading the requested resource and iteratively
+ * writing it to the client file descriptor
+ *
+ * @param fd - client file descriptor from accept()
+ * @param resource_path - local file path to the requested resource
+ *
+ * @return 0 on success, -1 on failure
+ */
 int write_http_response(int fd, const char *resource_path) {
     char *message = "";    // will hold either "404 Not Found" or "200 OK"
     int file_exists = 1;
@@ -108,7 +133,10 @@ int write_http_response(int fd, const char *resource_path) {
 
         // Write header to the client
         if (write(fd, header, strlen(header)) == -1) {
-            perror("write");
+            if (errno != ECONNRESET) {
+                // If peer resets on shutdown, do not print error message
+                perror("write");
+            }
             close(resource);
             return -1;
         }
@@ -119,20 +147,29 @@ int write_http_response(int fd, const char *resource_path) {
         while ((num_bytes_read = read(resource, buffer, BUFSIZE)) > 0) {
             // Write buffer to client
             if (write(fd, buffer, num_bytes_read) == -1) {
-                perror("write");
+                if (errno != ECONNRESET) {
+                    // If peer resets on shutdown, do not print error message
+                    perror("write");
+                }
                 close(resource);
                 return -1;
             }
         }
         if (num_bytes_read == -1) {    // read error occurred
-            perror("read");
+            if (errno != ECONNRESET) {
+                // If peer resets on shutdown, do not print error message
+                perror("read");
+            }
             close(resource);
             return -1;
         }
 
         // Close resource file
         if (close(resource) == -1) {
-            perror("close");
+            if (errno != ECONNRESET) {
+                // If peer resets on shutdown, do not print error message
+                perror("close");
+            }
             return -1;
         }
     } else {    // file does not exist
@@ -145,7 +182,10 @@ int write_http_response(int fd, const char *resource_path) {
 
         // Write the response to the client
         if (write(fd, header, strlen(header)) == -1) {
-            perror("write");
+            if (errno != ECONNRESET) {
+                // If peer resets on shutdown, do not print error message
+                perror("write");
+            }
             return -1;
         }
     }
