@@ -53,17 +53,12 @@ void *worker_thread(void *arg) {
         }
 
         if (read_http_request(fd, resource_name)) {
-            // if (!queue->shutdown) {
             printf("Error from reading in worker thread\n");
-            //}
             close(fd);
             continue;
         }
 
-        // if (!read_error) {
         snprintf(resource_path, BUFSIZE, "%s%s", serve_dir, resource_name);
-
-        //}
 
         if (write_http_response(fd, resource_path)) {
             printf("Error from writing in worker thread\n");
@@ -71,7 +66,9 @@ void *worker_thread(void *arg) {
             continue;
         }
 
-        close(fd);    // TODO: error check
+        if (close(fd)) {
+            break;
+        }
     }
 
     return NULL;
@@ -179,6 +176,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Create threads
     pthread_t threads[N_THREADS];
     for (int i = 0; i < N_THREADS; i++) {
         int ret_val = pthread_create(&threads[i], NULL, worker_thread, &queue);
@@ -219,7 +217,6 @@ int main(int argc, char **argv) {
             connection_queue_shutdown(&queue);
             join_multiple_threads(0, N_THREADS, threads);
             connection_queue_free(&queue);
-            // close(client_fd);
             close(sock_fd);
             return 1;
         }
@@ -237,7 +234,7 @@ int main(int argc, char **argv) {
             return_value = 1;
         }
     }
-    return_value = connection_queue_free(&queue);    // TODO error check
+    return_value = connection_queue_free(&queue);
 
     if (return_value) {
         return 1;
