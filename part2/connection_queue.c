@@ -3,8 +3,15 @@
 #include <stdio.h>
 #include <string.h>
 
+/**
+ * @brief Intializes a thread safe queue for connection file descriptors
+ *
+ * @details Initializes member variables, intializes one mutex, and two condition variables
+ *
+ * @param queue A pointer to the desired connection_queue_t to be initialized
+ * @return 0 on success, -1 on failure
+ */
 int connection_queue_init(connection_queue_t *queue) {
-    // TODO: Check if malloc needed here
     queue->read_idx = 0;
     queue->write_idx = 0;
     queue->length = 0;
@@ -31,13 +38,24 @@ int connection_queue_init(connection_queue_t *queue) {
     return 0;
 }
 
+/**
+ * @brief adds a file descriptor to the queue, fails is queue is shutdown
+ *
+ * @details acquires lock, waits for the queue to not be full (w/ cond. var.), adds fd to queue,
+ * signals that queue is not empty, then releases the lock
+ *
+ *
+ * @param queue pointer to the queue which the fd is added to
+ * @param fd client file descriptor to add (taken from accept())
+ *
+ * @return 0 on success, -1 on failure
+ */
 int connection_queue_enqueue(connection_queue_t *queue, int connection_fd) {
-    // TODO Implement Shutdown
     int error_code = 0;
     error_code = pthread_mutex_lock(&queue->lock);
     if (error_code) {
         fprintf(stderr, "pthread_mutex_lock: %s\n", strerror(error_code));
-        // Clean up handled by caller in htpp_server
+        // Clean up handled by caller in http_server
         return -1;
     }
 
@@ -78,6 +96,15 @@ int connection_queue_enqueue(connection_queue_t *queue, int connection_fd) {
     return 0;
 }
 
+/**
+ * @brief Removes a file descriptor from the queue, dequeuing can continue on shutdown
+ *
+ * @details Acquires lock, waits on cond. var. if the queue is empty, removes the fd from the queue,
+ * signals that the queue is not full, then releases the lock
+ *
+ * @param queue - Queue to take the fd from
+ * @return 0 on success, -1 on failure
+ */
 int connection_queue_dequeue(connection_queue_t *queue) {
     int error_code = 0;
     error_code = pthread_mutex_lock(&queue->lock);
@@ -125,12 +152,21 @@ int connection_queue_dequeue(connection_queue_t *queue) {
     return fd;
 }
 
+/**
+ * @brief Notifies threads that queue is shutdown for safe cleanup
+ *
+ * @details Acquires lock, sets shutdown flag, broadcasts all condition variables, then releases the
+ * lock
+ *
+ * @param queue Queue to be shutdown
+ * @return 0 on success, -1 on error
+ */
 int connection_queue_shutdown(connection_queue_t *queue) {
     int error_code = 0;
     error_code = pthread_mutex_lock(&queue->lock);
     if (error_code) {
         fprintf(stderr, "pthread_mutex_lock: %s\n", strerror(error_code));
-        // Clean up handled by caller in htpp_server
+        // Clean up handled by caller in http_server
         return -1;
     }
     queue->shutdown = 1;
@@ -157,6 +193,12 @@ int connection_queue_shutdown(connection_queue_t *queue) {
     return 0;
 }
 
+/**
+ * @brief frees the queue's lock and condition variables
+ *
+ * @param queue Queue to be freed
+ * @return 0 on success, -1 on failure
+ */
 int connection_queue_free(connection_queue_t *queue) {
     int error_code = 0;
     error_code = pthread_mutex_destroy(&queue->lock);

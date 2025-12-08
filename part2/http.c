@@ -40,6 +40,17 @@ const char *get_file_extension(const char *resource_path) {
     return extension;    // will either return the file extension or NULL if '.' was not found
 }
 
+/**
+ * @brief Consumes an http request and outputs the name of the request resource to resource_name
+ *
+ * @details Reads from TCP client file descriptor, tokenizes string and copies the name of the
+ * resource into resource_name
+ *
+ * @param fd file descriptor from an accept() call
+ * @param resource_name pointer to store the name of the requested resource in a character array
+ *
+ * @return 0 on success, -1 on error
+ */
 int read_http_request(int fd, char *resource_name) {
     char buffer[BUFSIZE];
 
@@ -63,6 +74,18 @@ int read_http_request(int fd, char *resource_name) {
     return 0;
 }
 
+/**
+ * @brief writes a full HTTP response to send a requested resource to a client
+ *
+ * @details Checks if the file exists, if it does, it sets up a string of the right size for the
+ * header then writes the header. Then it begins reading the requested resource and iteratively
+ * writing it to the client file descriptor
+ *
+ * @param fd - client file descriptor from accept()
+ * @param resource_path - local file path to the requested resource
+ *
+ * @return 0 on success, -1 on failure
+ */
 int write_http_response(int fd, const char *resource_path) {
     char *message = "";    // will hold either "404 Not Found" or "200 OK"
     int file_exists = 1;
