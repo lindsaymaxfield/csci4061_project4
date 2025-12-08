@@ -15,11 +15,10 @@
 #include "http.h"
 
 #define BUFSIZE 512
-#define LISTEN_QUEUE_LEN 128
+#define LISTEN_QUEUE_LEN 5
 #define N_THREADS 5
 
 int keep_going = 1;
-int sock_fd = -1;
 const char *serve_dir;
 
 /**
@@ -43,7 +42,6 @@ void *worker_thread(void *arg) {
     connection_queue_t *queue = (connection_queue_t *) arg;
     char resource_name[BUFSIZE];
     char resource_path[BUFSIZE];
-    // int read_error = 0;
 
     while (keep_going) {
         int fd = connection_queue_dequeue(queue);
@@ -67,7 +65,7 @@ void *worker_thread(void *arg) {
         }
 
         if (close(fd)) {
-            break;
+            continue;
         }
     }
 
@@ -137,7 +135,7 @@ int main(int argc, char **argv) {
         connection_queue_free(&queue);
         return 1;
     }
-    sock_fd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
+    int sock_fd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
     if (sock_fd == -1) {
         perror("socket");
         freeaddrinfo(server);
