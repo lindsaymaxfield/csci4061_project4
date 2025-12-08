@@ -20,9 +20,12 @@ int connection_queue_init(connection_queue_t *queue) {
     for (int i = 0; i < CAPACITY; ++i)
         queue->client_fds[i] = -1;
 
-    pthread_mutex_init(&queue->lock, NULL);    // mutex_init does not return errors
-
     int error_code = 0;
+    if (error_code = pthread_mutex_init(&queue->lock, NULL)) {
+        fprintf(stderr, "pthread_mutex_init: %s\n", strerror(error_code));
+        return -1;
+    }
+
     if ((error_code = pthread_cond_init(&queue->queue_not_full, NULL))) {
         fprintf(stderr, "pthread_cond_init: %s\n", strerror(error_code));
         pthread_mutex_destroy(&queue->lock);
@@ -204,11 +207,14 @@ int connection_queue_free(connection_queue_t *queue) {
     error_code = pthread_mutex_destroy(&queue->lock);
     if (error_code) {
         fprintf(stderr, "pthread_mutex_destroy: %s\n", strerror(error_code));
+        pthread_cond_destroy(&queue->queue_not_empty);
+        pthread_cond_destroy(&queue->queue_not_full);
         return -1;
     }
     error_code = pthread_cond_destroy(&queue->queue_not_empty);
     if (error_code) {
         fprintf(stderr, "pthread_cond_destroy: %s\n", strerror(error_code));
+        pthread_cond_destroy(&queue->queue_not_full);
         return -1;
     }
     error_code = pthread_cond_destroy(&queue->queue_not_full);
