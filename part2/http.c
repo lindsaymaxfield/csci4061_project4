@@ -61,13 +61,14 @@ int read_http_request(int fd, char *resource_name) {
         return -1;
     }
 
+    char *rest = buffer;
     char *token =
-        strtok(buffer, " ");    // specify the string to parse for the first call to strtok
+        strtok_r(rest, " ", &rest);    // specify the string to parse for the first call to strtok
     if (token != NULL) {
-        token = strtok(NULL, " ");    // call strtok again, this will have resource_name
+        token = strtok_r(rest, " ", &rest);    // call strtok again, this will have resource_name
     }
     if (token == NULL) {
-        fprintf(stderr, "strtok error\n");
+        fprintf(stderr, "strtok_r error\n");
         return -1;
     }
 

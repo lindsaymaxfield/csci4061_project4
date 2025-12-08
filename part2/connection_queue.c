@@ -18,7 +18,7 @@ int connection_queue_init(connection_queue_t *queue) {
     queue->shutdown = 0;
 
     for (int i = 0; i < CAPACITY; ++i)
-        queue->client_fds[i] = -2;
+        queue->client_fds[i] = -1;
 
     int error_code = 0;
     if ((error_code = pthread_mutex_init(&queue->lock, NULL))) {

@@ -45,9 +45,11 @@ void *worker_thread(void *arg) {
 
     while (keep_going) {
         int fd = connection_queue_dequeue(queue);
-        if (fd == -1) {
+        if (fd == -1 && queue->shutdown) {
             // exit if file descriptor is invalid and queue has shutdown
             break;
+        } else if (fd == -1) {
+            continue;
         }
 
         if (read_http_request(fd, resource_name)) {
@@ -65,6 +67,7 @@ void *worker_thread(void *arg) {
         }
 
         if (close(fd)) {
+            perror("close");
             continue;
         }
     }
