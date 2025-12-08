@@ -9,8 +9,10 @@ fi
 
 N=$1
 OUTPUT_DIR="test_outputs"
+FAILED_DL_DIR="failed_downloads"
 
 mkdir -p "$OUTPUT_DIR"
+mkdir -p "$FAILED_DL_DIR"
 
 echo "Running 'make test' $N times and skipping ports that return curl (7) errors..."
 echo
@@ -43,14 +45,28 @@ for ((i=1; i<=N; i++)); do
     echo "$fifth_last"
     echo
 
-    # If the line does NOT contain the word "Passed", append "_failed"
+    # Check whether the line contains "Passed"
     if [[ "$fifth_last" != *"Passed"* ]]; then
+        # Mark output file as failed
         failed_file="${output_file%.txt}_failed.txt"
         mv "$output_file" "$failed_file"
         output_file="$failed_file"
+
+        # ---- NEW: SAVE DOWNLOADED FILES SNAPSHOT ----
+        dl_snapshot="$FAILED_DL_DIR/run_${i}_port_${port}"
+        mkdir -p "$dl_snapshot"
+
+        if [ -d "downloaded_files" ]; then
+            cp -r "downloaded_files" "$dl_snapshot/"
+            echo "Saved failed downloaded_files to: $dl_snapshot/"
+        else
+            echo "Warning: downloaded_files directory missing!"
+        fi
+        # ----------------------------------------------
+
     fi
 
     port=$((port + 1))
 done
 
-echo "Complete — outputs saved in '$OUTPUT_DIR/'"
+echo "Complete — outputs saved in '$OUTPUT_DIR/' and failed downloads in '$FAILED_DL_DIR/'"
