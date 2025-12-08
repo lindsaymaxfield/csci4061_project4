@@ -125,7 +125,7 @@ int write_http_response(int fd, const char *resource_path) {
         // Calculate size of header to write to client
         int capacity = strlen("HTTP/1.0 \r\nContent-Type: \r\nContent-Length: \r\n\r\n") +
                        strlen(message) + strlen(mime_type) + strlen(file_size) + 1;
-        char header[capacity = 999];
+        char header[capacity];
 
         // Put together header for writing to the client
         snprintf(header, capacity, "HTTP/1.0 %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n",
