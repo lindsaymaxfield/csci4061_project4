@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -44,7 +45,7 @@ void *worker_thread(void *arg) {
     char resource_path[BUFSIZE];
 
     while (keep_going) {
-        int fd = connection_queue_dequeue(queue);
+        int fd = connection_queue_dequeue(queue); // get file descriptor from queue
         if (fd == -1 && queue->shutdown) {
             // exit if file descriptor is invalid and queue has shutdown
             break;
@@ -52,6 +53,7 @@ void *worker_thread(void *arg) {
             continue;
         }
 
+        // Get resource name from the client request
         if (read_http_request(fd, resource_name)) {
             printf("Error from reading in worker thread\n");
             close(fd);
@@ -60,6 +62,7 @@ void *worker_thread(void *arg) {
 
         snprintf(resource_path, BUFSIZE, "%s%s", serve_dir, resource_name);
 
+        // Write response to the client
         if (write_http_response(fd, resource_path)) {
             printf("Error from writing in worker thread\n");
             close(fd);
@@ -87,7 +90,7 @@ void *worker_thread(void *arg) {
 void join_multiple_threads(int start_val, int end_val, pthread_t threads[N_THREADS]) {
     for (int j = start_val; j < end_val; j++) {
         // pthread_join() not error checked because this function is only called during the cleanup
-        // of another error Final join loop only uses this function in the error case
+        // of another error. Final join loop only uses this function in the error case
         pthread_join(threads[j], NULL);
     }
 }
@@ -104,7 +107,10 @@ int main(int argc, char **argv) {
 
     // Create worker threads
     connection_queue_t queue;
-    connection_queue_init(&queue);
+    if (connection_queue_init(&queue)) {
+        // Error message and cleanup done within connection_queue_init()
+        return 1;
+    }
 
     // Catch SIGINT so we can clean up properly
     struct sigaction sigact;
@@ -171,7 +177,7 @@ int main(int argc, char **argv) {
         perror("sigfillset");
         return 1;
     }
-    // block all signals to workers
+    // Block all signals to workers
     if (sigprocmask(SIG_BLOCK, &worker_mask, &main_mask)) {
         perror("sigprocmask");
         return 1;
@@ -226,7 +232,6 @@ int main(int argc, char **argv) {
     // Once SIGINT has been sent
     int return_value = 0;
     return_value = connection_queue_shutdown(&queue);
-    return_value = close(sock_fd);
     for (int i = 0; i < N_THREADS; i++) {
         int result = pthread_join(threads[i], NULL);
         if (result != 0) {
@@ -238,7 +243,14 @@ int main(int argc, char **argv) {
     return_value = connection_queue_free(&queue);
 
     if (return_value) {
+        close(sock_fd);
         return 1;
     }
+
+    if (close(sock_fd)) {
+        perror("close");
+        return 1;
+    }
+
     return 0;
 }
